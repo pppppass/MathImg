@@ -1,0 +1,32 @@
+%! TeX encoding = UTF-8
+%! TeX program = LuaLaTeX
+
+\documentclass[english, nochinese]{pnote}
+\usepackage[paper]{pdef}
+
+\title{Answers to Assignments 1}
+\author{Zhihan Li, 1600010653}
+\date{October 22, 2018}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Poblem 1.} \textit{Answer.} Denote the center as $ \rbr{ i, j } $. For the straight line function $u$ (depicted in the left), norm of discretized gradient is
+\begin{equation}
+\norm{ \nabla u }_{ i, j } = \sqrt{ \rbr{u_x}_{ i, j }^2 + \rbr{u_y}_{ i, j } ^2 } = \sqrt{ \rbr{\frac{1}{ 2 h }}^2 + 0^2 } = \frac{1}{ 2 h }.
+\end{equation}
+For the inclined line $v$ (depicted in the right), the norm is
+\begin{equation}
+\norm{ \nabla v }_{ i, j } = \sqrt{ \rbr{v_x}_{ i, j }^2 + \rbr{v_y}_{ i, j } ^2 } = \sqrt{ \rbr{\frac{ 1 + \lambda }{ 4 h }}^2 + \rbr{\frac{ 1 + \lambda }{ 4 h }}^2 } = \frac{ \sqrt{2} \rbr{ 1 + \lambda } }{ 4 h }.
+\end{equation}
+As a result, $ \norm{ \nabla u }_{ i, j } = \norm{ \nabla v }_{ i, j } $ yields $ \lambda = \sqrt{2} - 1 $.
+
+Similarly, the descritized Laplacian operator for $u$ and $v$ are
+\begin{gather}
+\rbr{ \Delta u }_{ i, j } = \frac{-1}{h^2}, \\
+\rbr{ \Delta v }_{ i, j } = \frac{ -1 - 3 \lambda }{ 2 h^2 }
+\end{gather}
+and the condition for $ \rbr{ \Delta u }_{ i, j } = \rbr{ \Delta v }_{ i, j } $ is $ \lambda = 1 / 3 $.
+
+\end{document}
