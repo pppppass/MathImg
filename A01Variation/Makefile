@@ -1,11 +1,12 @@
-.PHONY: all
-all: Answer.pdf
+RUNOBJS = Problem21.run Problem22.run Problem23.run Problem24.run Problem25.run
 
-Answer.pdf: Answer.tex | Answer.aux
-	lualatex Answer.tex
+.PRECIOUS: %.py
+%.py: %.ipynb
+	jupyter nbconvert --to script $*
 
-Answer.aux: Answer.tex
-	lualatex Answer.tex
+%.run: %.py tv.py
+	python $<
+	touch $@
 
-.PHONY: report
-report: Answer.pdf
+.PHONY: run
+run: $(RUNOBJS)
