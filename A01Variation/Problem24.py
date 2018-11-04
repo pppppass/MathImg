@@ -31,9 +31,9 @@ for j in range(len(filenames)):
     i = skimage.io.imread("dataset/{}.bmp".format(filenames[j])) / 255.0
     i_degr = tv.calc_degrade(i, sigma, eta)
     u, _ = tv.opt_tv_admm(i_degr, sigma, lambdas[j], rhos[j], 1000, 1.0e-3, tv="aniso")
-    skimage.io.imsave("Figure4{}1.bmp".format(filenames[j]), numpy.clip(u, 0.0, 1.0))
+    skimage.io.imsave("Figure4{}1.png".format(filenames[j]), numpy.clip(u, 0.0, 1.0))
     print("{} anisotropic finished".format(filenames[j]))
     u, _ = tv.opt_tv_admm(i_degr, sigma, lambdas[j], rhos[j], 1000, 1.0e-3, tv="iso")
-    skimage.io.imsave("Figure4{}2.bmp".format(filenames[j]), numpy.clip(u, 0.0, 1.0))
+    skimage.io.imsave("Figure4{}2.png".format(filenames[j]), numpy.clip(u, 0.0, 1.0))
     print("{} isotropic finished".format(filenames[j]))
 

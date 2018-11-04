@@ -60,8 +60,9 @@ for j in range(len(filenames)):
     rt[4].append(skimage.measure.compare_ssim(i, i_degr))
     rt[5].append(skimage.measure.compare_ssim(i, u))
     if j in [1, 2, 3, 5, 7, 10]:
-        skimage.io.imsave("Figure1{}1.bmp".format(filenames[j]), numpy.clip(i_degr, 0.0, 1.0))
-        skimage.io.imsave("Figure1{}2.bmp".format(filenames[j]), numpy.clip(u, 0.0, 1.0))
+        skimage.io.imsave("Figure1{}0.png".format(filenames[j]), numpy.clip(i, 0.0, 1.0))
+        skimage.io.imsave("Figure1{}1.png".format(filenames[j]), numpy.clip(i_degr, 0.0, 1.0))
+        skimage.io.imsave("Figure1{}2.png".format(filenames[j]), numpy.clip(u, 0.0, 1.0))
         print("{} saved".format(filenames[j]))
     print("{} finished".format(filenames[j]))
 
