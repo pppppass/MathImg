@@ -1,13 +1,22 @@
 # Temporary files
+*.bak
+*.blg
 *.aux
 *.log
 *.thm
 *.synctex.gz
+*.bbl
+*.bcf
+*.run.xml
+.*~/
 
 # Generated files
 
 # Binary files
 *.pdf
+*.ipynb
+*.dat
+*.dir
 
 # External files
 

@@ -2,17 +2,22 @@
 %! TeX program = LuaLaTeX
 
 \documentclass[english, nochinese]{pnote}
+\usepackage{siunitx}
 \usepackage[paper]{pdef}
+\usepackage{multirow}
+\usepackage{biblatex}
+
+\addbibresource{Bibliography.bib}
 
 \title{Answers to Assignments 1}
 \author{Zhihan Li, 1600010653}
-\date{October 22, 2018}
+\date{November 4, 2018}
 
 \begin{document}
 
 \maketitle
 
-\textbf{Poblem 1.} \textit{Answer.} Denote the center as $ \rbr{ i, j } $. For the straight line function $u$ (depicted in the left), norm of discretized gradient is
+\textbf{Problem 1.} \textit{Answer.} Denote the center as $ \rbr{ i, j } $. For the straight line function $u$ (depicted in the left), norm of discretized gradient is
 \begin{equation}
 \norm{ \nabla u }_{ i, j } = \sqrt{ \rbr{u_x}_{ i, j }^2 + \rbr{u_y}_{ i, j } ^2 } = \sqrt{ \rbr{\frac{1}{ 2 h }}^2 + 0^2 } = \frac{1}{ 2 h }.
 \end{equation}
@@ -22,11 +27,360 @@ For the inclined line $v$ (depicted in the right), the norm is
 \end{equation}
 As a result, $ \norm{ \nabla u }_{ i, j } = \norm{ \nabla v }_{ i, j } $ yields $ \lambda = \sqrt{2} - 1 $.
 
-Similarly, the descritized Laplacian operator for $u$ and $v$ are
+Similarly, the discretized Laplacian operator for $u$ and $v$ are
 \begin{gather}
 \rbr{ \Delta u }_{ i, j } = \frac{-1}{h^2}, \\
 \rbr{ \Delta v }_{ i, j } = \frac{ -1 - 3 \lambda }{ 2 h^2 }
 \end{gather}
 and the condition for $ \rbr{ \Delta u }_{ i, j } = \rbr{ \Delta v }_{ i, j } $ is $ \lambda = 1 / 3 $.
+
+\textbf{Problem 2.} \textit{Answer.} We test the total variation for image enhancement (deblurring and denoising) in the following sections.
+
+\section{Description}
+
+Let $u$ be an image of size $ m \times n $, say $ u_{ i, j } $ with $ 1 \le i \le m $ and $ 1 \le j \le n $. We take the range of $ u_{ i, j } $ to be $ \sbr{ 0, 1 } $ here. The image gets blurred to $ A u $ according to a Gaussian kernel of size $\sigma$, which means
+\begin{equation}
+\rbr{ A u }_{ i, j } = \sum_{ k, l } a_{ k, l } u_{ i + k, j + l }
+\end{equation}
+and
+\begin{equation}
+a_{ k, l } = \frac{ \exp \rbr{ -\rbr{ k^2 + l^2 } / 2 \sigma^2 } }{ \sum_{ k, l } \exp \rbr{ -\rbr{ k^2 + l^2 } / 2 \sigma^2 } }.
+\end{equation}
+\emph{Note that this is different from the requirement documentation because $ 2 \sigma^2 $ here. However, this is the version implemented in MATLAB} \verb"fspecial" \emph{and Python} \verb"skimage.filters.gaussian". Some noise are added to the noise then, which we write $ f = A u + \xi $, where $ \xi_{ i, j } \sim \mathcal{N} \rbr{ 0, \eta^2 } $.
+
+We recover $u$ from $f$ by total variation regularization with ADMM. The variational problem can be written as
+\begin{equation}
+J = \frac{1}{2} \int \rbr{ f - A u }^2 + \lambda \int \abs{ \nabla u },
+\end{equation}
+which we discretize as
+\begin{equation}
+J = \rbr{ \frac{1}{2} \norm{ f - A u }_2^2 + \lambda \abs{ \nabla u } }.
+\end{equation}
+The optimization problem turns out to be
+\begin{equation}
+\begin{array}{ll}
+\text{minimize} & \norm{ f - A u }_2^2 / 2 + \lambda \abs{ \nabla u }.
+\end{array}
+\end{equation}
+By introducing $ v = \nabla u $, the optimization is
+\begin{equation}
+\begin{array}{ll}
+\text{minimize} & \norm{ f - A u }_2^2 / 2 + \lambda \abs{v}; \\
+\text{subject to} & v = \nabla u.
+\end{array}
+\end{equation}
+We apply ADMM (alternating direction method of multipliers) here, by alternating the augmented Lagrangian
+\begin{equation}
+L \rbr{ u, v, p } = \frac{1}{2} \norm{ f - A u }_2^2 + \lambda \abs{v} + p^{\text{T}} \rbr{ v - \nabla u } + \frac{\rho}{2} \norm{ v - \nabla u }_2^2,
+\end{equation}
+where $p$ is the dual variable. The iteration steps of $u$ is
+\begin{equation} \label{Eq:ItU}
+\begin{split}
+u^{\rbr{ k + 1 }} &= \mathop{\arg\min}_u \frac{1}{2} \norm{ f - A u }_2^2 + \lambda \abs{v^{\rbr{k}}} + \rbr{p^{\rbr{k}}}^{\text{T}} \rbr{ v^{\rbr{k}} - \nabla u } + \frac{\rho}{2} \norm{ v^{\rbr{k}} - \nabla u }_2^2 \\
+&= \rbr{ A^{\text{T}} A + \rho \nabla^{\text{T}} \nabla }^{-1} \rbr{ A^{\text{T}} f + \nabla^{\text{T}} p^{\rbr{k}} + \rho \nabla^{\text{T}} v^{\rbr{k}} }.
+\end{split}
+\end{equation}
+We apply FFT (fast Fourier transform) or DCT (discrete cosine transform) or DST (discrete sine transform) to solve this equation. The iteration steps of $v$ is
+\begin{equation}
+\begin{split} \label{Eq:ItV}
+v^{\rbr{ k + 1 }} &= \mathop{\arg\min}_v \frac{1}{2} \norm{ f - A u^{\rbr{ k + 1 }} }_2^2 + \lambda \abs{v} + \rbr{p^{\rbr{k}}}^{\text{T}} \rbr{ v - \nabla u^{\rbr{ k + 1 }} } + \frac{\rho}{2} \norm{ v - \nabla u^{\rbr{ k + 1 }} }_2^2 \\
+&= \mathcal{S}_{ \lambda / \rho } \rbr{ \nabla u^{\rbr{ k + 1 }} - \frac{1}{\rho} p^{\rbr{k}} },
+\end{split}
+\end{equation}
+where $\mathcal{S}$ is the soft shrinkage function. When $\abs{\cdot}$ are selected to be the 2, 1 norm $ \norm{\cdot}_{ 2, 1 } $, the discretized total variation is the \emph{isotropic total variation} and
+\begin{equation}
+\rbr{ \mathcal{S}_t \rbr{v} }_{ i, j } = \rbr{ v_{ i, j }^1, v_{ i, j }^2 } \frac{ \phi_t \rbr{\norm{v_{ i, j }}_2} }{\norm{v_{ i, j }}_2}
+\end{equation}
+where
+\begin{equation}
+\phi_t \rbr{x} = \max \cbr{ x - t, 0 }.
+\end{equation}
+When $\abs{\cdot}$ are chosen to be the 1, 1 norm $ \norm{\cdot}_{ 1, 1 } $, the discretization turns out be \emph{anisotropic total variation} and
+\begin{equation}
+\rbr{ \mathcal{S}_t \rbr{v} }_{ i, j } = \rbr{ v_{ i, j }^1 \frac{ \phi_t \rbr{\abs{v_{ i, j }^1}} }{\abs{v_{ i, j }^1}}, v_{ i, j }^2 \frac{ \phi_t \rbr{\abs{v_{ i, j }^2}} }{\abs{v_{ i, j }^2}} }.
+\end{equation}
+The iteration steps of $p$ is
+\begin{equation}
+p^{\rbr{ k + 1 }} = p^{\rbr{k}} + \alpha \rho \rbr{ v^{\rbr{ k + 1 }} - \nabla u^{\rbr{ k + 1 }} }
+\end{equation}
+where $\alpha$ is the accelerative step size. The stopping criterion is about the duality gap, says
+\begin{equation}
+\frac{\norm{ v - \nabla u }}{\norm{f}} < \epsilon.
+\end{equation}
+For faster convergence, the initial $u^{\rbr{0}}$ is set to be $f$, with $ v^{\rbr{0}} = \nabla f $ and $ p^{\rbr{0}} = 0 $.
+
+\section{Numerical experiment}
+
+We test this algorithm on three categories of images, namely ``classical'', ``geometric'' and ``Anime''. The names of these images have been given and can be directly lookup up in the \verb"dataset" folder. The categories of images are listed in Table \ref{Tbl:Cat}.
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+Category & Name \\
+\hline
+\multirow{5}*{Classical} & \verb"baboon" \\
+& \verb"barbara" \\
+& \verb"boats" \\
+& \verb"lena" \\
+& \verb"peppers" \\
+\hline
+\multirow{3}*{Geometric} & \verb"gradient" \\
+& \verb"radial" \\
+& \verb"triangle" \\
+\hline
+\multirow{4}*{Anime} & \verb"konata" \\
+& \verb"kagami" \\
+& \verb"tsukasa" \\
+& \verb"miyuki" \\
+\hline
+\end{tabular}
+\caption{Categories of images}
+\label{Tbl:Cat}
+\end{table}
+
+In the generation of degraded images $f$, the Gaussian filter from scikit-image, namely the function \verb"skimage.filters.gaussian" has been used. Here $\sigma$ are set to be 2 and $\eta$ $ \text{5.0} / 255 $ if not otherwise specified. The total variation is chosen to be the isotropic one. The inverse are calculated by DCT. The stopping criterion $\epsilon$ is set to be $10^{-3}$. The numerical results are listed in Table \ref{Tbl:Num}.
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Name & $\lambda$ & $\rho$ & \#Iterations & Time (\Si{s}) \\
+\hline
+\input{Table11.tbl}
+\end{tabular}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{c|}{ PSNR (\Si{dB}) } & \multicolumn{3}{c|}{SSIM} \\
+\hline
+Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
+\hline
+\input{Table12.tbl}
+\end{tabular}
+\caption{Numerical results of total variation model}
+\label{Tbl:Num}
+\end{table}
+
+Some images are shown in Figure \ref{Fig:Num}. The images are clipped from $u^{\rbr{k}}$ to $ \sbr{ 0, 1 } $ and then scaled (by 255) to grayscale.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure1barbara0.png}
+\includegraphics[scale=0.2]{Figure1barbara1.png}
+\includegraphics[scale=0.2]{Figure1barbara2.png}
+
+\includegraphics[scale=0.2]{Figure1boats0.png}
+\includegraphics[scale=0.2]{Figure1boats1.png}
+\includegraphics[scale=0.2]{Figure1boats2.png}
+
+\includegraphics[scale=0.2]{Figure1lena0.png}
+\includegraphics[scale=0.2]{Figure1lena1.png}
+\includegraphics[scale=0.2]{Figure1lena2.png}
+
+\includegraphics[scale=0.2]{Figure1gradient0.png}
+\includegraphics[scale=0.2]{Figure1gradient1.png}
+\includegraphics[scale=0.2]{Figure1gradient2.png}
+
+\includegraphics[scale=0.2]{Figure1triangle0.png}
+\includegraphics[scale=0.2]{Figure1triangle1.png}
+\includegraphics[scale=0.2]{Figure1triangle2.png}
+
+\includegraphics[scale=0.2]{Figure1tsukasa0.png}
+\includegraphics[scale=0.2]{Figure1tsukasa1.png}
+\includegraphics[scale=0.2]{Figure1tsukasa2.png}
+
+\caption{Images of total variation model}
+\label{Fig:Num}
+}
+{
+\footnotesize Left: original image $u$; middle: degraded image $f$; right: enhanced image $u^{\rbr{k}}$.
+}
+\end{figure}
+
+It can be seen from the numerical results and images that the total variation model, together with the ADMM algorithm, succeeds in enhancing the degraded images. The stair case artifacts can also be observed. The (selected) regularization term for the ``geometric'' category are noticeably larger because the original images are already piece-wise constant. The images \verb"baboon" and \verb"barbara" have complicated textures and the model fails to restore them. This leads to low increment in both PSNR and SSIM. Total variation model behaves better on ``Anime'' category than on ``classical'' category because the Anime images has more simple structure.
+
+\section{Discussion}
+
+\subsection{The role of $\lambda$}
+
+We investigate the role of $\lambda$ by scaling it by power of 2. The qualitative results can be seen in Figure \ref{Fig:Lambda} and quantitative results are shown in Table \ref{Tbl:Lambda}.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure2lena0.png}
+\includegraphics[scale=0.2]{Figure2lena1.png}
+\includegraphics[scale=0.2]{Figure2lena2.png}
+
+\includegraphics[scale=0.2]{Figure2lena3.png}
+\includegraphics[scale=0.2]{Figure2lena4.png}
+\includegraphics[scale=0.2]{Figure2lena5.png}
+
+\includegraphics[scale=0.2]{Figure2tsukasa0.png}
+\includegraphics[scale=0.2]{Figure2tsukasa1.png}
+\includegraphics[scale=0.2]{Figure2tsukasa2.png}
+
+\includegraphics[scale=0.2]{Figure2tsukasa3.png}
+\includegraphics[scale=0.2]{Figure2tsukasa4.png}
+\includegraphics[scale=0.2]{Figure2tsukasa5.png}
+
+\caption{Images of different $\lambda$}
+\label{Fig:Lambda}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:Lambda}.
+}
+\end{figure}
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table21.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table22.tbl}
+\end{tabular}
+\caption{Effects of different $\lambda$}
+\label{Tbl:Lambda}
+\end{table}
+
+It can be seen that when $\lambda$ is small, there are strong snow noise as artifacts lying on the image. This is because the inverse problem minimizing
+\begin{equation}
+J = \frac{1}{2} \int \norm{ f - A u }_2^2
+\end{equation}
+is ill-posed, and the inverted noise $ A^{-1} \xi $ turns out to be very large. When $\lambda$ is large, the term
+\begin{equation}
+\int \abs{ \nabla u },
+\end{equation}
+which prefers piece-wise constant, dominates. Choosing a suitable $\lambda$ is not an easy job. Bad $\lambda$ leads to both bad PSNR and SSIM.
+
+\subsection{Boundary effect}
+
+We use DCT to compute the inverse in \eqref{Eq:ItU} in the previous experiments, which induces Neumann boundary condition automatically. To investigate the boundary effects of the discretization, we instead apply FFT and DST here, which induce cyclic boundary and Dirichlet boundary. We use $ \lambda = \text{2.00e-6} $ and $ \rho = \text{2.00e-6} $ throughout the experiment. The images are shown in Figure \ref{Fig:Bound}.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure3lena1.png}
+\includegraphics[scale=0.2]{Figure3lena2.png}
+\includegraphics[scale=0.2]{Figure3lena3.png}
+
+\includegraphics[scale=0.2]{Figure3tsukasa1.png}
+\includegraphics[scale=0.2]{Figure3tsukasa2.png}
+\includegraphics[scale=0.2]{Figure3tsukasa3.png}
+
+\caption{Images of different boundary conditions}
+\label{Fig:Bound}
+}
+{
+\footnotesize First: DCT, Neumann boundary; second: FFT, cyclic boundary; third: DST: Dirichlet boundary.
+}
+\end{figure}
+
+It can be seen directly that both FFT and DST suffer from boundary effect, between which DST is worse. This is because the generation of degraded image by \verb"skimage.filters.gaussian" specifies \verb"nearest" boundary by default, which is similar to Neumann boundary rather than the other two. Since the inverse problem is ill-posed, difference on the boundary get magnified and therefore a ``frame'' occurs. The boundary effect also harms the convergence: ADMM with DST does not converge in 1000 steps actually.
+
+We should also point out that the key is the \emph{match} between the boundary condition used in generation of the degraded image and that of enhancement. If we degrade an image using DST, the image can still be enhanced or restored.
+
+\subsection{Rotational invariance of total variation}
+
+We apply isotropic total variation in the previous experiments. Here we change to the anisotropic one to investigate the difference. We use $ \lambda = \text{2.00e-6} $ and $ \rho = \text{2.00e-6} $ throughout the experiment. The images are shown in Figure \ref{Fig:Iso}.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure4lena1.png}
+\includegraphics[scale=0.2]{Figure4lena2.png}
+
+\includegraphics[scale=0.2]{Figure4tsukasa1.png}
+\includegraphics[scale=0.2]{Figure4tsukasa2.png}
+
+\caption{Images of different total variations}
+\label{Fig:Iso}
+}
+{
+\footnotesize First: anisotropic total variation; second: isotropic total variation.
+}
+\end{figure}
+
+It can be seen that for the anisotropic total variation, the stair case effects consists of constant-valued patches with edges orthogonal to axes. This leads to sawtooth effects on inclined lines and mosaic effects on fading colors. The isotropic total variation leads to smoother images since the patches may have oblique edges. This is exactly the difference between ``anisotropic'' and ``isotropic''.
+
+\subsection{The $\ell^0$ model}
+
+We may change the total variation model to be the $\ell^0$ model \parencite{xu_image_2011} \parencite{dong_efficient_2013}, by modifying the discretized energy functional to be
+\begin{equation}
+J = \rbr{ \frac{1}{2} \norm{ f - A u }_2^2 + \lambda \norm{ \nabla u } }_0.
+\end{equation}
+Although this model is non-convex, we can still try applying ADMM. The iterations turn out to be nearly identical, except the the $v$ steps should be modified from \eqref{Eq:ItV} to
+\begin{equation}
+v^{\rbr{k}} = \mathcal{H}_{ \lambda / \rho } \rbr{ \nabla u^{\rbr{ k + 1 }} - \frac{1}{\rho} p^{\rbr{k}} }.
+\end{equation}
+Still using isotropic total variation, the hard shrinkage operator $\mathcal{H}$ is
+\begin{equation}
+\rbr{ \mathcal{H}_t }_{ i, j } = \rbr{ v_{ i, j }^1, v_{ i, j }^2 } \frac{ \psi_t \rbr{\norm{v_{ i, j }}_2} }{\norm{v_{ i, j }}_2}
+\end{equation}
+where
+\begin{equation}
+\psi_t \rbr{x} = 1_{ x > t } x.
+\end{equation}
+Noticing that the model may diverge, we take an average on $u^{\rbr{k}}$ by define
+\begin{equation}
+\overline{u}^{\rbr{k}} = \frac{1}{k} \sum_{ l = 1 }^k u^{\rbr{l}}
+\end{equation}
+and provide $\overline{u}^{\rbr{k}}$ as the final output, as suggested by \parencite{dong_efficient_2013}. The qualitative results can be seen in Figure \ref{Fig:L0} and quantitative results are shown in Table \ref{Tbl:L0}.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure2lena0.png}
+\includegraphics[scale=0.2]{Figure5lena5.png}
+\includegraphics[scale=0.2]{Figure5lena4.png}
+
+\includegraphics[scale=0.2]{Figure5lena3.png}
+\includegraphics[scale=0.2]{Figure5lena2.png}
+\includegraphics[scale=0.2]{Figure5lena1.png}
+
+\includegraphics[scale=0.2]{Figure2tsukasa0.png}
+\includegraphics[scale=0.2]{Figure5tsukasa5.png}
+\includegraphics[scale=0.2]{Figure5tsukasa4.png}
+
+\includegraphics[scale=0.2]{Figure5tsukasa3.png}
+\includegraphics[scale=0.2]{Figure5tsukasa2.png}
+\includegraphics[scale=0.2]{Figure5tsukasa1.png}
+
+\caption{Images of different $\lambda$ for the $\ell^0$ model}
+\label{Fig:L0}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:L0}.
+}
+\end{figure}
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table51.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table52.tbl}
+\end{tabular}
+\caption{Effects of different $\lambda$ for the $\ell^0$ model}
+\label{Tbl:L0}
+\end{table}
+
+Comparing with Figure \ref{Fig:Lambda} and Table \ref{Tbl:Lambda}, the $\ell^0$ model can hardly beat the total variation model directly in terms of PNSR, SSIM or visual quality. However, we may notice that the images with large $\lambda$ look like oil paints and therefore this model can be used a method for image stylizing.
+
+\printbibliography
 
 \end{document}
