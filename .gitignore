@@ -9,6 +9,8 @@
 *.bcf
 *.run.xml
 .*~/
+__pycache__/
+*.run
 
 # Generated files
 
