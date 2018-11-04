@@ -32,3 +32,8 @@ To reproduce the numerical results:
 3. Proceed down to a folder and execute `make run` to reproduce numerical results;
 4. Execute `make report` or `make` to regenerate the report;
 5. The numerical results are updated in the report, i.e., `Answer.pdf` or `Report.pdf`.
+
+To run scripts:
+1. Activate the environment `mathimg`;
+2. Execute `python script.py --help` to find hints.
+3. Execute the script according to the hints.
