@@ -5,17 +5,17 @@ import skimage
 import tv
 
 parser = argparse.ArgumentParser(description="Enhance a degraded image")
-parser.add_argument("input", type=str, help="Input filename")
-parser.add_argument("output", type=str, help="Output filename")
-parser.add_argument("--sigma", type=float, default=2.0, help="Size of Gaussian kernel")
-parser.add_argument("--lamda", type=float, default=2.0e-6, help="Regularization coefficient")
-parser.add_argument("--rho", type=float, default=2.0e-6, help="Step size of ADMM")
-parser.add_argument("--iters", type=int, default=1000, help="Maximum number of iterations")
-parser.add_argument("--eps", type=float, default=1.0e-3, help="Tolerance")
-parser.add_argument("--inv", type=str, default="dct", help="Method of calculating inverse")
-parser.add_argument("--tv", type=str, default="iso", help="Type of total variation")
-parser.add_argument("--alpha", type=float, default=1.618, help="Regularization coefficient")
-parser.add_argument("--truth", type=str, default=None, help="Ground-truth image")
+parser.add_argument("input", type=str, help="Input filename (should be .bmp)")
+parser.add_argument("output", type=str, help="Output filename (should be .bmp)")
+parser.add_argument("--sigma", type=float, default=2.0, help="Size of Gaussian kernel (default 2.0)")
+parser.add_argument("--lamda", type=float, default=2.0e-6, help="Regularization coefficient (default 2.0e-6)")
+parser.add_argument("--rho", type=float, default=2.0e-6, help="Step size of ADMM (default 2.0e-6)")
+parser.add_argument("--iters", type=int, default=1000, help="Maximum number of iterations (default 1000)")
+parser.add_argument("--eps", type=float, default=1.0e-3, help="Tolerance (default 1.0e-3)")
+parser.add_argument("--inv", type=str, default="dct", help="Method of calculating inverse: fft, dct (default), dst")
+parser.add_argument("--tv", type=str, default="iso", help="Type of total variation: iso (default), aniso")
+parser.add_argument("--alpha", type=float, default=1.618, help="Acclerative step size of ADMM (default 1.618)")
+parser.add_argument("--truth", type=str, default=None, help="Ground-truth image for PSNR and SSIM comparison")
 
 args = parser.parse_args()
 
