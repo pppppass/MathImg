@@ -38,7 +38,7 @@ and the condition for $ \rbr{ \Delta u }_{ i, j } = \rbr{ \Delta v }_{ i, j } $ 
 
 \section{Description}
 
-Let $u$ be an image of size $ m \times n $, say $ u_{ i, j } $ with $ 1 \le i \le m $ and $ 1 \le j \le n $. We take the range of $ u_{ i, j } $ to be $ \sbr{ 0, 1 } $ here. The image gets blurred to $ A u $ according to a Gaussian kernel of size $\sigma$, which means
+Let $u$ be an image of size $ M \times N $, say $ u_{ i, j } $ with $ 1 \le i \le M $ and $ 1 \le j \le N $. We take the range of $ u_{ i, j } $ to be $ \sbr{ 0, 1 } $ here. The image gets blurred to $ A u $ according to a Gaussian kernel of size $\sigma$, which means
 \begin{equation}
 \rbr{ A u }_{ i, j } = \sum_{ k, l } a_{ k, l } u_{ i + k, j + l }
 \end{equation}
@@ -50,7 +50,7 @@ a_{ k, l } = \frac{ \exp \rbr{ -\rbr{ k^2 + l^2 } / 2 \sigma^2 } }{ \sum_{ k, l 
 
 We recover $u$ from $f$ by total variation regularization with ADMM. The variational problem can be written as
 \begin{equation}
-J = \frac{1}{2} \int \rbr{ f - A u }^2 + \lambda \int \abs{ \nabla u },
+\frac{1}{2} \int \rbr{ f - A u }^2 + \lambda \int \abs{ \nabla u },
 \end{equation}
 which we discretize as
 \begin{equation}
@@ -252,7 +252,7 @@ We investigate the role of $\lambda$ by scaling it by power of 2. The qualitativ
 
 It can be seen that when $\lambda$ is small, there are strong snow noise as artifacts lying on the image. This is because the inverse problem minimizing
 \begin{equation}
-J = \frac{1}{2} \int \norm{ f - A u }_2^2
+\frac{1}{2} \int \norm{ f - A u }_2^2
 \end{equation}
 is ill-posed, and the inverted noise $ A^{-1} \xi $ turns out to be very large. When $\lambda$ is large, the term
 \begin{equation}

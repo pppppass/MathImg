@@ -20,6 +20,7 @@ Temporary/
 *.ipynb
 *.dat
 *.dir
+*.png
 
 # External files
 

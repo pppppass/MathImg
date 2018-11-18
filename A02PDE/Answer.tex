@@ -1,0 +1,804 @@
+%! TeX encoding = UTF-8
+%! TeX program = LuaLaTeX
+
+\documentclass[english, nochinese]{pnote}
+\usepackage{siunitx}
+\usepackage[paper, cgu]{pdef}
+\usepackage{pgf}
+
+\DeclareMathOperator\opvar{\mathrm{Var}}
+\DeclareMathOperator\opcovar{\mathrm{Covar}}
+\DeclareMathOperator\opsgn{\mathrm{sgn}}
+
+\title{Answers to Assignments 2}
+\author{Zhihan Li, 1600010653}
+\date{November 17, 2018}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Problem.} \textit{Answer.} We test the three given PDE models image enhancement
+(deblurring and denoising) in the following sections. 
+
+\section{Heat equation}
+
+\subsection{Description}
+
+We keep the notations in Assignment 1. Denote $u$ to be the $ M \times N $ original image. We only consider noise in this section, say the degradation model is given by
+\begin{equation}
+f = u + \xi,
+\end{equation}
+with $ \xi_{ i, j } \sim \mathcal{N} \rbr{ 0, \eta^2 } $.
+
+We try to recover $u$ from $f$ using the heat equation, say
+\begin{equation}
+\begin{cases}
+\rbr{u_t} \rbr{ x, t } = \rbr{ u_{ x x } + u_{ y y } } \rbr{ x, t }, & \rbr{ x, t } \in \Omega \times \rsbr{ 0, T }; \\
+u_{\mathbf{n}} \rbr{ x, t } = 0, & \rbr{ x, t } \in \pd \Omega \times \rsbr{ 0, T }; \\
+u \rbr{ x, 0 } = f \rbr{x}, & x \in \Omega,
+\end{cases}
+\end{equation}
+where $\Omega$ corresponds to the region of image and $T$ stands for terminal time.
+
+We discretize the partial differential equation as
+\begin{equation} \label{Eq:DisHeat}
+\frac{ U_{ i, j }^{ m + 1 } - U_{ i, j }^m }{\tau} = \frac{ U_{ i, j + 1 }^m + U_{ i, j - 1 }^m + U_{ i + 1, j }^m + U_{ i - 1, j }^m - 4 U_{ i, j }^m }{h^2}.
+\end{equation}
+Here 
+\begin{equation}
+h = \frac{1}{ \min \cbr{ M, N } }
+\end{equation}
+and $\tau$ is to be determined. We denote
+\begin{equation}
+\mu = \frac{\tau}{h^2}
+\end{equation}
+to be the grid ratio. The ($L^2$, with $L^{\infty}$ in many cases) stability condition require
+\begin{equation}
+\mu \le \frac{1}{4}.
+\end{equation}
+We implicitly assume $ M = N $ in the following arguments for brevity and the region of images is therefore $ \Omega = \sbr{ 0, 1 } \times \sbr{ 0, 1 } $. The adiabatic boundary condition $ u_{\mathbf{n}} = 0 $ is realized by assuming $ U_{ 0, j } = U_{ 1, j } $, $ U_{ m + 1, j } = U_{ m, j } $ for $ 0 \le j \le n + 1 $ and the similar condition for $i$ explicitly.
+
+In reality, in the continuous setting, the numerical solution can be analytical derived according to the theory of partial differential equations. If we set symmetric and periodic boundary condition of $u$ and tile $u$ onto the whole plane, the solution can be written as the convolution
+\begin{equation}\label{Eq:Conv}
+u = G_{ 2 t } \ast f,
+\end{equation}
+where $G_{\sigma^2}$ is the Gaussian convolution kernel of size $\sigma$, say
+\begin{equation}
+G_{\sigma^2} \rbr{ x, y } = \frac{1}{ 2 \spi \sigma^2 } \exp \rbr{-\frac{ x^2 + y^2 }{ 2 \sigma^2 }}.
+\end{equation}
+Back to the discretization, this means convolution of a Gaussian kernel with the size $ \sigma_t = \sqrt{ 2 t } / h $ pixels. Although there is closed analytical solution, we still implement the solving process of \eqref{Eq:DisHeat} here for comparison between different methods.
+
+We need to point out that the notation we used is the standard numerical partial differential solution. However, \emph{many literature} in the image processing community remove the $h^2$ term in \eqref{Eq:DisHeat} (or say take $ h = 1 $) and the conversion between these two time scales is $ t' = t / h^2 $. The relative termination time is also $ T' = T / h^2 $.
+
+\subsection{Numerical experiment}
+
+We use the same dataset as described in Assignment 1. We add additive noise with strength $ \eta = 20.0 /255 $ if not otherwise specified. We set $ \mu = 1 / 10 $ here to gain a more precise control of the heat kernel. This is because for any $m$, $U^m$ approximate the solution at $ t = m \tau = m \mu h^2 $ and the size of convolution kernel is $ \sqrt{ 2 m \mu } $ pixels. And small $\mu$ (with slightly larger $m$) means we may control the that size better. Additionally, when $ m \mu $ is fixed, larger $\mu$ means the discrete kernel has a larger support and therefore the noise may be removed in a better sense. The final step size is chosen manually to achieve a better visual quality. The numerical results are listed in Table \ref{Tbl:Heat}.
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+Name & \#Iterations & Time (\Si{s}) & $T$ & $T'$ & $\sigma_t$ \\
+\hline
+\input{Table11.tbl}
+\end{tabular}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{c|}{ PSNR (\Si{dB}) } & \multicolumn{3}{c|}{SSIM} \\
+\hline
+Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
+\hline
+\input{Table12.tbl}
+\end{tabular}
+\caption{Numerical results of the heat equation}
+\label{Tbl:Heat}
+\end{table}
+
+Some images are shown in Figure \ref{Fig:Heat}. The images are clipped from $u^{\rbr{k}}$ to $ \sbr{ 0, 1 } $ and then scaled (by 255) to grayscale if not otherwise specified.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure01baboon0.png}
+\includegraphics[scale=0.2]{Figure01baboon1.png}
+\includegraphics[scale=0.2]{Figure01baboon2.png}
+
+\includegraphics[scale=0.2]{Figure01barbara0.png}
+\includegraphics[scale=0.2]{Figure01barbara1.png}
+\includegraphics[scale=0.2]{Figure01barbara2.png}
+
+\includegraphics[scale=0.2]{Figure01lena0.png}
+\includegraphics[scale=0.2]{Figure01lena1.png}
+\includegraphics[scale=0.2]{Figure01lena2.png}
+
+\includegraphics[scale=0.2]{Figure01gradient0.png}
+\includegraphics[scale=0.2]{Figure01gradient1.png}
+\includegraphics[scale=0.2]{Figure01gradient2.png}
+
+\includegraphics[scale=0.2]{Figure01radial0.png}
+\includegraphics[scale=0.2]{Figure01radial1.png}
+\includegraphics[scale=0.2]{Figure01radial2.png}
+
+\includegraphics[scale=0.2]{Figure01tsukasa0.png}
+\includegraphics[scale=0.2]{Figure01tsukasa1.png}
+\includegraphics[scale=0.2]{Figure01tsukasa2.png}
+
+\caption{Images of the heat equation}
+\label{Fig:Heat}
+}
+{
+\footnotesize Left: original image $u$; middle: degraded image $f$; right: denoised image $U^m$.
+}
+\end{figure}
+
+We can see from this numerical results that heat equation can indeed remove the noise. However, from the images, there are still perceptually visible noise in the images, and even some random spots. Additionally, the final image gets a little blurred, especially the center of the strips in the image \verb"barbara" and the center of \verb"radial". For images with complicated geometric structures, for example \verb"radial", the PNSR may decrease but SSIM as well as the visual quality, may increase.
+
+\subsection{Dynamic}
+
+We observe the dynamic of heat equation by varying the termination time $T$ or equivalently the termination $m$. We take $ \mu = 1 / 100 $ here. The qualitative results can be seen in Figure \ref{Fig:HeatDyn} and quantitative results are given in Table \ref{Tbl:HeatDyn}.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure02barbara0.png}
+\includegraphics[scale=0.2]{Figure02barbara1.png}
+\includegraphics[scale=0.2]{Figure02barbara2.png}
+
+\includegraphics[scale=0.2]{Figure02barbara3.png}
+\includegraphics[scale=0.2]{Figure02barbara4.png}
+\includegraphics[scale=0.2]{Figure02barbara5.png}
+
+\includegraphics[scale=0.2]{Figure02lena0.png}
+\includegraphics[scale=0.2]{Figure02lena1.png}
+\includegraphics[scale=0.2]{Figure02lena2.png}
+
+\includegraphics[scale=0.2]{Figure02lena3.png}
+\includegraphics[scale=0.2]{Figure02lena4.png}
+\includegraphics[scale=0.2]{Figure02lena5.png}
+
+\includegraphics[scale=0.2]{Figure02tsukasa0.png}
+\includegraphics[scale=0.2]{Figure02tsukasa1.png}
+\includegraphics[scale=0.2]{Figure02tsukasa2.png}
+
+\includegraphics[scale=0.2]{Figure02tsukasa3.png}
+\includegraphics[scale=0.2]{Figure02tsukasa4.png}
+\includegraphics[scale=0.2]{Figure02tsukasa5.png}
+
+\caption{Images from the heat equation of different $T$}
+\label{Fig:HeatDyn}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:HeatDyn}.
+}
+\end{figure}
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{barbara}} \\
+\hline
+\input{Table21.tbl}
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table22.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table23.tbl}
+\end{tabular}
+\caption{Effects of the heat equation of different $T$}
+\label{Tbl:HeatDyn}
+\end{table}
+
+For this numerical result we can see that quality of images increase first and then drop. Note that textures in \verb"barbara" get lost gradually. We conclude that it is a crucial task to choose the termination time $T$. Small $T$ fails to remove the noises, while large $T$ blurs the image and damage visual quality.
+
+\section{Anisotropic diffusion}
+
+\subsection{Description}
+
+To alleviate the deficiency from isotropic diffusion, namely the heat equation, we may use anisotrpic diffusion to design the equation. The related equation is
+\begin{equation}
+\begin{cases}
+\rbr{u_t} \rbr{ x, t } = \nabla \cdot \rbr{ c \rbr{\abs{ \nabla u }^2} \nabla u } \rbr{ x, t }, & \rbr{ x, t } \in \Omega \times \rsbr{ 0, T }; \\
+u_{\mathbf{n}} \rbr{ x, t } = 0, & \rbr{ x, t } \in \pd \Omega \times \rsbr{ 0, T }; \\
+u \rbr{ x, 0 } = f \rbr{x}, & x \in \Omega.
+\end{cases}
+\end{equation}
+
+We discretize the equation as follows. We first compute
+\begin{equation}
+\rbr{U_x}_{ i + 1 / 2, j }^m = \frac{ U_{ i + 1 , j }^m - U_{ i, j }^m }{h},
+\end{equation}
+and
+\begin{equation}
+\rbr{U_y}_{ i + 1 / 2, j }^m = \frac{ U_{ i, j + 1 } + U_{ i, j - 1 } - U_{ i + 1, j + 1 } - U_{ i + 1, j - 1 } }{ 4 h }
+\end{equation}
+and then calculate
+\begin{equation}
+c_{ i + 1 / 2, j }^m = c \rbr{ \rbr{\rbr{U_x}_{ i + 1 / 2, j }^m}^2 + \rbr{\rbr{U_y}_{ i + 1 / 2, j }^m}^2 }.
+\end{equation}
+We may carry out similar calculation for $c_{ i, j + 1 / 2 } $. The equation of $U$ is therefore
+\begin{equation}
+\begin{split}
+\frac{ U_{ i, j }^{ m + 1 } - U_{ i, j }^m }{\tau} &= \frac{ c_{ i, j + 1 / 2 }^m U_{ i, j + 1 }^m + c_{ i, j - 1 / 2 }^m U_{ i, j - 1 }^m + c_{ i + 1 / 2, j }^m U_{ i + 1, j }^m + c_{ i - 1 / 2, j }^m U_{ i - 1, j }^m }{h^2} \\
+&- \frac{ \rbr{ c_{ i, j + 1 / 2 } + c_{ i, j - 1 / 2 } + c_{ i + 1 / 2, j } + c_{ i - 1 / 2, j } } U_{ i, j }^m }{h^2}.
+\end{split}
+\end{equation}
+The necessary stability condition is
+\begin{equation}
+\mu \le \frac{1}{ 4 \norm{c}_{\infty} }.
+\end{equation}
+
+\subsection{Smoothing equation}
+
+One canonical choice of $c$ is
+\begin{equation}
+c \rbr{s} = \frac{1}{\sqrt{ 1 + s }},
+\end{equation}
+which ensures
+\begin{equation}
+u_t = c \rbr{\abs{ \nabla u }^2} u_{ T T } + b \rbr{\abs{ \nabla u }^2} u_{ N N }
+\end{equation}
+satisfies
+\begin{equation}
+\lim_{ s \rightarrow +\infty } \frac{ b \rbr{s} }{ c \rbr{s} } = 0
+\end{equation}
+where
+\begin{equation}
+b \rbr{s} = c \rbr{s} + 2 s c' \rbr{s}
+\end{equation}
+and $T$, $N$ are tangent direction and normal direction defined by $ \nabla u $. This equation perform diffusion along the edges.
+
+We take $ \mu = 1 / 4 $ and exhibit the numerical results in Figure \ref{Fig:Smooth} and Table \ref{Tbl:Smooth}. The final $T$ is chosen according to Subsection \ref{SubSec:Stop}.
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Name & \#Iterations & Time (\Si{s}) & $T$ & $T'$ \\
+\hline
+\input{Table31.tbl}
+\end{tabular}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{c|}{ PSNR (\Si{dB}) } & \multicolumn{3}{c|}{SSIM} \\
+\hline
+Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
+\hline
+\input{Table32.tbl}
+\end{tabular}
+\caption{Numerical results of the smoothing equation}
+\label{Tbl:Smooth}
+\end{table}
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure03baboon0.png}
+\includegraphics[scale=0.2]{Figure03baboon1.png}
+\includegraphics[scale=0.2]{Figure03baboon2.png}
+
+\includegraphics[scale=0.2]{Figure03barbara0.png}
+\includegraphics[scale=0.2]{Figure03barbara1.png}
+\includegraphics[scale=0.2]{Figure03barbara2.png}
+
+\includegraphics[scale=0.2]{Figure03lena0.png}
+\includegraphics[scale=0.2]{Figure03lena1.png}
+\includegraphics[scale=0.2]{Figure03lena2.png}
+
+\includegraphics[scale=0.2]{Figure03tsukasa0.png}
+\includegraphics[scale=0.2]{Figure03tsukasa1.png}
+\includegraphics[scale=0.2]{Figure03tsukasa2.png}
+
+\caption{Images of the smoothing equation}
+\label{Fig:Smooth}
+}
+{
+\footnotesize Left: original image $u$; middle: degraded image $f$; right: denoised image $U^m$.
+}
+\end{figure}
+
+It can be seen from the results that this smoothing equation outperforms the heat equation on various images. However, it fails on \verb"baboon" possibly because there are irregular textures in the image and the stopping criterion considers them as noise. Manually decrease $T$ for this image may help. Surprisingly, some of the texture in \verb"barbara" gets preserved.
+
+\subsection{Dynamic of smoothing equation}
+
+We observe the dynamic of smoothing equation by varying the termination time $T$ or equivalently the termination $m$. We set $ \mu = 1 / 4 $ here. The qualitative results can be seen in Figure \ref{Fig:SmoothDyn} and quantitative results are given in Table \ref{Tbl:SmoothDyn}.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure04barbara0.png}
+\includegraphics[scale=0.2]{Figure04barbara1.png}
+\includegraphics[scale=0.2]{Figure04barbara2.png}
+
+\includegraphics[scale=0.2]{Figure04barbara3.png}
+\includegraphics[scale=0.2]{Figure04barbara4.png}
+\includegraphics[scale=0.2]{Figure04barbara5.png}
+
+\includegraphics[scale=0.2]{Figure04lena0.png}
+\includegraphics[scale=0.2]{Figure04lena1.png}
+\includegraphics[scale=0.2]{Figure04lena2.png}
+
+\includegraphics[scale=0.2]{Figure04lena3.png}
+\includegraphics[scale=0.2]{Figure04lena4.png}
+\includegraphics[scale=0.2]{Figure04lena5.png}
+
+\includegraphics[scale=0.2]{Figure04tsukasa0.png}
+\includegraphics[scale=0.2]{Figure04tsukasa1.png}
+\includegraphics[scale=0.2]{Figure04tsukasa2.png}
+
+\includegraphics[scale=0.2]{Figure04tsukasa3.png}
+\includegraphics[scale=0.2]{Figure04tsukasa4.png}
+\includegraphics[scale=0.2]{Figure04tsukasa5.png}
+
+\caption{Images from the smoothing equation of different $T$}
+\label{Fig:SmoothDyn}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:SmoothDyn}.
+}
+\end{figure}
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{barbara}} \\
+\hline
+\input{Table41.tbl}
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table42.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table43.tbl}
+\end{tabular}
+\caption{Effects of the smoothing equation of different $T$}
+\label{Tbl:SmoothDyn}
+\end{table}
+
+For this numerical result we can see that quality of images increase first and then drop. Note that textures in \verb"barbara" get lost gradually. When $T$ is large, the image evolves to piece-wise constant and details become missing.
+
+\subsection{Perona and Malik equation}
+
+Another equation proposed by Perona and Malik <> involves
+\begin{equation}
+c \rbr{s} = \frac{1}{ 1 + s / K },
+\end{equation}
+which ensures
+\begin{equation}
+u_t = c \rbr{\abs{ \nabla u }^2} u_{ T T } + b \rbr{\abs{ \nabla u }^2} u_{ N N }
+\end{equation}
+satisfies
+\begin{equation}
+b \rbr{s} < 0
+\end{equation}
+for large $ s \ge K $. This model can performs denoising and deblurring simultaneously.
+
+We first test the denosing problem with $ \eta = 20.0 / 255 $. We take $ \mu = 1 / 4 $ and show the numerical results in Figure \ref{Fig:PM} and Table \ref{Tbl:PM}. Here $K$ is set to be $100$. The final $T$ is chosen according to Subsection \ref{SubSec:Stop}.
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Name & \#Iterations & Time (\Si{s}) & $T$ & $T'$ \\
+\hline
+\input{Table51.tbl}
+\end{tabular}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{c|}{ PSNR (\Si{dB}) } & \multicolumn{3}{c|}{SSIM} \\
+\hline
+Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
+\hline
+\input{Table52.tbl}
+\end{tabular}
+\caption{Numerical results of the Perona and Malik equation for noise}
+\label{Tbl:PM}
+\end{table}
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure05baboon0.png}
+\includegraphics[scale=0.2]{Figure05baboon1.png}
+\includegraphics[scale=0.2]{Figure05baboon2.png}
+
+\includegraphics[scale=0.2]{Figure05barbara0.png}
+\includegraphics[scale=0.2]{Figure05barbara1.png}
+\includegraphics[scale=0.2]{Figure05barbara2.png}
+
+\includegraphics[scale=0.2]{Figure05lena0.png}
+\includegraphics[scale=0.2]{Figure05lena1.png}
+\includegraphics[scale=0.2]{Figure05lena2.png}
+
+\includegraphics[scale=0.2]{Figure05tsukasa0.png}
+\includegraphics[scale=0.2]{Figure05tsukasa1.png}
+\includegraphics[scale=0.2]{Figure05tsukasa2.png}
+
+\caption{Images of the Perona and Malik equation for noise}
+\label{Fig:PM}
+}
+{
+\footnotesize Left: original image $u$; middle: degraded image $f$; right: denoised image $U^m$.
+}
+\end{figure}
+
+It can be seen from the results that this smoothing equation outperforms the heat equation on various images. It sometimes outperforms the smoothing equation but vice versa. The Perona and Malik equation still fails on \verb"baboon" possibly because there are irregular textures in the image and the stopping criterion considers them as noise. The texture in \verb"barbara" gets preserved more completely. Compared to the smoothing equation, more edges are preserved and even some has been sharpened.
+
+We then test Perona and Malik equation on images with both blurs and noise. We take $ \sigma = 2.0 $ and $ \eta = 5.0 / 255 $. Here $K$ is kept to be $100$ and $ \mu = 1 / 4 $. The numerical results are shown in Table \ref{Tbl:PMEnh} and Figure \ref{Fig:PMEnh}. Here $T$ or say $m$ is chosen manually.
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Name & \#Iterations & Time (\Si{s}) & $T$ & $T'$ \\
+\hline
+\input{Table71.tbl}
+\end{tabular}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{c|}{ PSNR (\Si{dB}) } & \multicolumn{3}{c|}{SSIM} \\
+\hline
+Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
+\hline
+\input{Table72.tbl}
+\end{tabular}
+\caption{Numerical results of the Perona and Malik equation for blurs and noise}
+\label{Tbl:PMEnh}
+\end{table}
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure11barbara0.png}
+\includegraphics[scale=0.2]{Figure11barbara1.png}
+\includegraphics[scale=0.2]{Figure11barbara2.png}
+
+\includegraphics[scale=0.2]{Figure11lena0.png}
+\includegraphics[scale=0.2]{Figure11lena1.png}
+\includegraphics[scale=0.2]{Figure11lena2.png}
+
+\includegraphics[scale=0.2]{Figure11gradient0.png}
+\includegraphics[scale=0.2]{Figure11gradient1.png}
+\includegraphics[scale=0.2]{Figure11gradient2.png}
+
+\includegraphics[scale=0.2]{Figure11tsukasa0.png}
+\includegraphics[scale=0.2]{Figure11tsukasa1.png}
+\includegraphics[scale=0.2]{Figure11tsukasa2.png}
+
+\caption{Images of the Perona and Malik equation for blurs and noise}
+\label{Fig:PMEnh}
+}
+{
+\footnotesize Left: original image $u$; middle: degraded image $f$; right: denoised image $U^m$.
+}
+\end{figure}
+
+We can see that the Perona and Malik equation can indeed recover some blur images. However, the total variation model still outperforms this equation.
+
+\subsection{Dynamic of Perona and Malik equation}
+
+We observe the dynamic of Perona and Malik equation by varying the termination time $T$ or equivalently the termination $m$. We set $ \mu = 1 / 4 $ here. Here $K$ is set to be $100$. The qualitative results can be seen in Figure \ref{Fig:PMDyn} and quantitative results are given in Table \ref{Tbl:PMDyn}.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure06barbara0.png}
+\includegraphics[scale=0.2]{Figure06barbara1.png}
+\includegraphics[scale=0.2]{Figure06barbara2.png}
+
+\includegraphics[scale=0.2]{Figure06barbara3.png}
+\includegraphics[scale=0.2]{Figure06barbara4.png}
+\includegraphics[scale=0.2]{Figure06barbara5.png}
+
+\includegraphics[scale=0.2]{Figure06lena0.png}
+\includegraphics[scale=0.2]{Figure06lena1.png}
+\includegraphics[scale=0.2]{Figure06lena2.png}
+
+\includegraphics[scale=0.2]{Figure06lena3.png}
+\includegraphics[scale=0.2]{Figure06lena4.png}
+\includegraphics[scale=0.2]{Figure06lena5.png}
+
+\includegraphics[scale=0.2]{Figure06tsukasa0.png}
+\includegraphics[scale=0.2]{Figure06tsukasa1.png}
+\includegraphics[scale=0.2]{Figure06tsukasa2.png}
+
+\includegraphics[scale=0.2]{Figure06tsukasa3.png}
+\includegraphics[scale=0.2]{Figure06tsukasa4.png}
+\includegraphics[scale=0.2]{Figure06tsukasa5.png}
+
+\caption{Images from the Perona and Malik equation of different $T$}
+\label{Fig:PMDyn}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:PMDyn}.
+}
+\end{figure}
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{barbara}} \\
+\hline
+\input{Table61.tbl}
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table62.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table63.tbl}
+\end{tabular}
+\caption{Effects of the Perona and Malik equation of different $T$}
+\label{Tbl:PMDyn}
+\end{table}
+
+For this numerical result we can see that quality of images increase first and then drop.
+
+\subsection{Stopping criterion} \label{SubSec:Stop}
+
+Different from variation models, PDE models intrinsically have no clear stopping criteria because the terminal time time-evolving equation can be infinitely as long as the solution does not blow up. However, the stopping criterion is crucial to the model as pointed in the previous section: small $t$ fails to remove the noise added, while large $t$ leads to severe blurs on the image.
+
+We adopt the stopping criterion introduced in <> here. To be exact, we compute the correlation coefficient
+\begin{equation}
+C_t = \frac{ \opcovar \rbr{ u \rbr{ t, \cdot }, f \rbr{\cdot} - u \rbr{ t, \cdot } } }{\sqrt{ \opvar u \rbr{ t, \cdot } \opvar \rbr{ f \rbr{\cdot} - u \rbr{ t, \cdot } } }}
+\end{equation}
+for each $ t = t_m = m \tau $. We choose
+\begin{equation}
+T = \mathop{\arg\min}_{t_m} \abs{C_{t_m}}.
+\end{equation}
+
+To verify the selection of such $T$, we test $C_t$, PSNR and SSIM on two images. We choose $ \mu = 1 / 4 $ and use Perona and Malik equation with $ K = 100 $. The results are shown in Figure \ref{Fig:Corr}.
+
+\begin{figure}[htb]
+\centering
+\scalebox{0.75}{\input{Figure12.pgf}}
+\caption{Curves of $C_t$, PSNR and SSIM}
+\label{Fig:Corr}
+\end{figure}
+
+It can be seen from the figure that the optimal $t$ for $C_t$ corresponds to maximal PNSR and SSIM roughly.
+
+\section{Shock wave filter}
+
+\subsection{Description}
+
+We consider the blurred image in this section. That is, the degradation model is
+\begin{equation}
+f = \mathcal{A} u
+\end{equation}
+without noise. Here $\mathcal{A}$ is a convolutional kernel of size $\sigma$.
+
+To sharpen the edges, the may consider using a hyperbolic equation to form shock waves. The differential equation is
+\begin{equation} \label{Eq:Hyp}
+\begin{cases}
+\rbr{u_t} \rbr{ x, t } = -\abs{ \nabla u } F \rbr{ L \rbr{u} }; \\
+u \rbr{ x, 0 } = f \rbr{x}; & x \in \Omega
+\end{cases}
+\end{equation}
+where $L$ is a operator.
+
+The discretization of the equation is
+\begin{equation}
+\frac{ U_{ i, j }^{ m + 1 } - U_{ i, j }^m }{\tau} = \frac{1}{h} \sqrt{ m \rbr{ U_{ i, j + 1 }^m - U_{ i, j }^m, U_{ i, j }^m - U_{ i, j - 1 }^m }^2 + m \rbr{ U_{ i + 1, j }^m - U_{ i, j }^m, U_{ i, j }^m - U_{ i - 1, j }^m }^2 } F \rbr{L_{ i, j }^m},
+\end{equation}
+where $ L_{ i, j }^m $ is descretized using central difference, and
+\begin{equation}
+m \rbr{ \alpha, \beta } =
+\begin{cases}
+\min \rbr{ \alpha, \beta }, & \alpha, \beta > 0; \\
+\max \rbr{ \alpha, \beta }, & \alpha, \beta < 0; \\
+0, & \text{otherwise}.
+\end{cases}
+\end{equation}
+We denote
+\begin{equation}
+\nu = \frac{\tau}{h}
+\end{equation}
+to be the grid ratio. The CFL condition <> is
+\begin{equation}
+\nu \le \frac{1}{ 4 \norm{F}_{\infty} }.
+\end{equation}
+
+Although the original paper <> requires $F$ to be Lipchitz continuous, we discover by experiment that
+\begin{equation}
+F \rbr{s} = \opsgn s =
+\begin{cases}
+1, & s > 0; \\
+0, & s = 0; \\
+-1, & s < 0
+\end{cases}
+\end{equation}
+works the best. This is because the absolute value of $u$ varies dramatically among images, and therefore selecting $\nu$ is very tricky. We may consider
+\begin{equation}
+F_{\epsilon} \rbr{s} =
+\begin{cases}
+1, & s \ge \epsilon; \\
+s / \epsilon, & -\epsilon \le s \le \epsilon; \\
+-1, & s \le -\epsilon
+\end{cases}
+\end{equation}
+for theoretical analysis.
+
+\subsection{Numerical experiment}
+
+One choice for $L$ is
+\begin{equation} \label{Eq:Curve}
+L \rbr{u} = \frac{1}{\abs{ \nabla u }^2} \rbr{ u_x^2 u_{ x x } + 2 u_x u_y u_{ x y } + u_y^2 u_{ y y } },
+\end{equation}
+which corresponds to the second derivative of $u$ in the direction of $ \nabla u / \abs{ \nabla u } $.
+
+We set the size of blur kernel to be $ \sigma = 2.0 $. The grid ratio $\nu$ is chosen to be $ 1 / 10 $. The numerical results are listed in Table \ref{Tbl:Shock}.
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+Name & \#Iterations & Time (\Si{s}) & $T$ \\
+\hline
+\input{Table81.tbl}
+\end{tabular}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{c|}{ PSNR (\Si{dB}) } & \multicolumn{3}{c|}{SSIM} \\
+\hline
+Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
+\hline
+\input{Table82.tbl}
+\end{tabular}
+\caption{Numerical results of the shock wave filter}
+\label{Tbl:Shock}
+\end{table}
+
+Some images are shown in Figure \ref{Fig:Shock}.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure07barbara0.png}
+\includegraphics[scale=0.2]{Figure07barbara1.png}
+\includegraphics[scale=0.2]{Figure07barbara2.png}
+
+\includegraphics[scale=0.2]{Figure07lena0.png}
+\includegraphics[scale=0.2]{Figure07lena1.png}
+\includegraphics[scale=0.2]{Figure07lena2.png}
+
+\includegraphics[scale=0.2]{Figure07peppers0.png}
+\includegraphics[scale=0.2]{Figure07peppers1.png}
+\includegraphics[scale=0.2]{Figure07peppers2.png}
+
+\includegraphics[scale=0.2]{Figure07gradient0.png}
+\includegraphics[scale=0.2]{Figure07gradient1.png}
+\includegraphics[scale=0.2]{Figure07gradient2.png}
+
+\includegraphics[scale=0.2]{Figure07triangle0.png}
+\includegraphics[scale=0.2]{Figure07triangle1.png}
+\includegraphics[scale=0.2]{Figure07triangle2.png}
+
+\includegraphics[scale=0.2]{Figure07tsukasa0.png}
+\includegraphics[scale=0.2]{Figure07tsukasa1.png}
+\includegraphics[scale=0.2]{Figure07tsukasa2.png}
+
+\caption{Images of the shock wave filter}
+\label{Fig:Shock}
+}
+{
+\footnotesize Left: original image $u$; middle: degraded image $f$; right: denoised image $U^m$.
+}
+\end{figure}
+
+We can see from this numerical results that the shock wave filter can indeed perform deblurring. However, the edges may get sharpened. Notice that in the \verb"tsukasa" image, the lines on the boundary of characters get significantly thicker than the original image. This is because de blurring lines on the boundary gets thicker because of blurs.
+
+\subsection{Dynamic}
+
+We observe the dynamic of the shock wave equation by varying the termination time $T$ or equivalently the termination $m$. We take $ \nu = 1 / 40 $ here. The qualitative results can be seen in Figure \ref{Fig:ShockDyn} and quantitative results are given in Table \ref{Tbl:ShockDyn}.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure08lena0.png}
+\includegraphics[scale=0.2]{Figure08lena1.png}
+\includegraphics[scale=0.2]{Figure08lena2.png}
+
+\includegraphics[scale=0.2]{Figure08lena3.png}
+\includegraphics[scale=0.2]{Figure08lena4.png}
+\includegraphics[scale=0.2]{Figure08lena5.png}
+
+\includegraphics[scale=0.2]{Figure08tsukasa0.png}
+\includegraphics[scale=0.2]{Figure08tsukasa1.png}
+\includegraphics[scale=0.2]{Figure08tsukasa2.png}
+
+\includegraphics[scale=0.2]{Figure08tsukasa3.png}
+\includegraphics[scale=0.2]{Figure08tsukasa4.png}
+\includegraphics[scale=0.2]{Figure08tsukasa5.png}
+
+\caption{Images from the shock wave filter of different $T$}
+\label{Fig:ShockDyn}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:ShockDyn}.
+}
+\end{figure}
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table91.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table92.tbl}
+\end{tabular}
+\caption{Effects of the shock wave filter of different $T$}
+\label{Tbl:ShockDyn}
+\end{table}
+
+For this numerical result we can see that quality of images increase first and then drop. When $T$ goes very large, the image become piece-wise linear.
+
+\subsection{Different choices of $L$}
+
+Another standard choice of $L$ is
+\begin{equation}
+L_2 = u_{ x x } + u_{ y y }.
+\end{equation}
+We compare the distinction between $L_1$ in \eqref{Eq:Curve} and $L_2$ in Figure \ref{Fig:DiffL}. We take $ \nu = 1 / 40 $ and $ m = 80 $ here.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure10lena2.png}
+\includegraphics[scale=0.2]{Figure10lena1.png}
+
+\includegraphics[scale=0.2]{Figure10tsukasa2.png}
+\includegraphics[scale=0.2]{Figure10tsukasa1.png}
+
+\caption{Images of different $L$}
+\label{Fig:DiffL}
+}
+{
+\footnotesize First: $L_1$; second $L_2$
+}
+\end{figure}
+
+From these images, we can see that final images from $L_2$ has smoother edges than $L_1$.
+
+\subsection{Effect of noise}
+
+We may change our model and add additive noise of strength $ \eta = 5.0 / 255 $ into the image.
+We investigate the difference in Figure \ref{Fig:Noise}. We take $ \nu = 1 / 40 $ and $ m = 80 $ here.
+
+\begin{figure}[htb]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure09lena1.png}
+\includegraphics[scale=0.2]{Figure09lena2.png}
+
+\includegraphics[scale=0.2]{Figure09tsukasa1.png}
+\includegraphics[scale=0.2]{Figure09tsukasa2.png}
+
+\caption{Image with and without noises}
+\label{Fig:Noise}
+}
+{
+\footnotesize First: without noise; second: with noise
+}
+\end{figure}
+
+From these images, we can see that if noise is added into the degraded image, the edges of the final image turn harsh and noise is actually preserved. This is because the hyperbolic equation \eqref{Eq:Hyp} preserved values along the characteristics, and therefore noise is retained until shock is formed.
+
+\end{document}
