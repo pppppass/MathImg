@@ -5,6 +5,9 @@
 \usepackage{siunitx}
 \usepackage[paper, cgu]{pdef}
 \usepackage{pgf}
+\usepackage{biblatex}
+
+\addbibresource{Bibliography.bib}
 
 \DeclareMathOperator\opvar{\mathrm{Var}}
 \DeclareMathOperator\opcovar{\mathrm{Covar}}
@@ -214,7 +217,7 @@ We discretize the equation as follows. We first compute
 \end{equation}
 and
 \begin{equation}
-\rbr{U_y}_{ i + 1 / 2, j }^m = \frac{ U_{ i, j + 1 } + U_{ i, j - 1 } - U_{ i + 1, j + 1 } - U_{ i + 1, j - 1 } }{ 4 h }
+\rbr{U_y}_{ i + 1 / 2, j }^m = \frac{ U_{ i + 1, j + 1 } + U_{ i + 1, j - 1 } - U_{ i, j + 1 } - U_{ i, j - 1 } }{ 4 h }
 \end{equation}
 and then calculate
 \begin{equation}
@@ -366,7 +369,7 @@ For this numerical result we can see that quality of images increase first and t
 
 \subsection{Perona and Malik equation}
 
-Another equation proposed by Perona and Malik <> involves
+Another equation proposed by Perona and Malik \parencite{perona_scale-space_1990} involves
 \begin{equation}
 c \rbr{s} = \frac{1}{ 1 + s / K },
 \end{equation}
@@ -548,7 +551,7 @@ For this numerical result we can see that quality of images increase first and t
 
 Different from variation models, PDE models intrinsically have no clear stopping criteria because the terminal time time-evolving equation can be infinitely as long as the solution does not blow up. However, the stopping criterion is crucial to the model as pointed in the previous section: small $t$ fails to remove the noise added, while large $t$ leads to severe blurs on the image.
 
-We adopt the stopping criterion introduced in <> here. To be exact, we compute the correlation coefficient
+We adopt the stopping criterion introduced in \parencite{tsiotsios_choice_2013} here. To be exact, we compute the correlation coefficient
 \begin{equation}
 C_t = \frac{ \opcovar \rbr{ u \rbr{ t, \cdot }, f \rbr{\cdot} - u \rbr{ t, \cdot } } }{\sqrt{ \opvar u \rbr{ t, \cdot } \opvar \rbr{ f \rbr{\cdot} - u \rbr{ t, \cdot } } }}
 \end{equation}
@@ -604,12 +607,12 @@ We denote
 \begin{equation}
 \nu = \frac{\tau}{h}
 \end{equation}
-to be the grid ratio. The CFL condition <> is
+to be the grid ratio. The CFL condition \parencite{osher_feature-oriented_1990} is
 \begin{equation}
 \nu \le \frac{1}{ 4 \norm{F}_{\infty} }.
 \end{equation}
 
-Although the original paper <> requires $F$ to be Lipchitz continuous, we discover by experiment that
+Although the original paper \parencite{osher_feature-oriented_1990} requires $F$ to be Lipchitz continuous, we discover by experiment that
 \begin{equation}
 F \rbr{s} = \opsgn s =
 \begin{cases}
@@ -800,5 +803,7 @@ We investigate the difference in Figure \ref{Fig:Noise}. We take $ \nu = 1 / 40 
 \end{figure}
 
 From these images, we can see that if noise is added into the degraded image, the edges of the final image turn harsh and noise is actually preserved. This is because the hyperbolic equation \eqref{Eq:Hyp} preserved values along the characteristics, and therefore noise is retained until shock is formed.
+
+\printbibliography
 
 \end{document}
