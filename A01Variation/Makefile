@@ -36,7 +36,7 @@ $(TBLOBJS): $(wildcard $(RUNOBJS)) $(if $(wildcard Result.dir), Plot.py)
 %.py: %.ipynb
 	jupyter nbconvert --to script $*
 
-%.run: %.py tv.py
+%.run: %.py tv.py utils/degrade.py
 	python $<
 	touch $@
 

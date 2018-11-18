@@ -1,0 +1,38 @@
+#! /usr/bin/env python
+
+import time
+import argparse
+import numpy
+import skimage.io
+import skimage.measure
+import pm
+
+parser = argparse.ArgumentParser(description="Denoise a degraded image")
+parser.add_argument("input", type=str, help="Input filename (should be .bmp)")
+parser.add_argument("output", type=str, help="Output filename (should be .bmp)")
+parser.add_argument("--mu", type=float, default=1.0/4.0, help="Grid ratio (default 0.25)")
+parser.add_argument("--iters", type=int, default=1000, help="Maximum number of iterations (default 1000)")
+parser.add_argument("--coef", type=float, default=100.0, help="Coefficient K (default 100.0)")
+parser.add_argument("--nonl", type=str, default="sqrt", help="Style of nonlinear function: sqrt (default, smoothing), frac (pm)")
+parser.add_argument("--grad", type=str, default="full", help="Style of gradient: full (default), fast")
+parser.add_argument("--stop", type=bool, default=False, help="Automatic stopping criterion (default False)")
+parser.add_argument("--truth", type=str, default=None, help="Ground-truth image for PSNR and SSIM comparison")
+
+args = parser.parse_args()
+
+i_degr = skimage.io.imread(args.input) / 255.0
+start = time.time()
+if args.stop:
+    u, ctr = pm.evolve_pm(i_degr, args.mu, args.iters, args.coef, nonl=args.nonl, grad=args.grad, eps=0.0)
+else:
+    u, ctr = pm.evolve_pm(i_degr, args.mu, args.iters, args.coef, nonl=args.nonl, grad=args.grad)
+end = time.time()
+skimage.io.imsave(args.output, numpy.clip(u, 0.0, 1.0))
+print("Time: {:.5f}".format(end - start))
+print("Iterations: {}".format(ctr))
+if args.truth is not None:
+    i = skimage.io.imread(args.truth) / 255.0
+    print("PSNR before: {:.5f}".format(skimage.measure.compare_psnr(i, i_degr)))
+    print("PSNR after: {:.5f}".format(skimage.measure.compare_psnr(i, u)))
+    print("SSIM before: {:.5f}".format(skimage.measure.compare_ssim(i, i_degr)))
+    print("SSIM after: {:.5f}".format(skimage.measure.compare_ssim(i, u)))

@@ -7,7 +7,9 @@
 import time
 import shelve
 import numpy
-import skimage
+import skimage.io
+import skimage.measure
+from utils import degrade
 import tv
 
 
@@ -49,7 +51,7 @@ rt = [[], [], [], [], [], []]
 
 for j in range(len(filenames)):
     i = skimage.io.imread("dataset/{}.bmp".format(filenames[j])) / 255.0
-    i_degr = tv.calc_degrade(i, sigma, eta)
+    i_degr = degrade.calc_degrade(i, sigma, eta)
     start = time.time()
     u, ctr = tv.opt_tv_admm(i_degr, sigma, lambdas[j], rhos[j], 1000, 1.0e-3)
     end = time.time()

@@ -3,40 +3,6 @@ import scipy.fftpack
 import skimage
 
 
-def calc_degrade(image, sigma, eta, style="conv", seed=1):
-    i = image
-    n_x, n_y = i.shape
-    if style == "conv":
-        i_blur = skimage.filters.gaussian(i, sigma=sigma)
-    elif style == "fft":
-        c_x, c_y = n_x // 2, n_y // 2
-        i_x, i_y = numpy.indices((n_x, n_y))
-        k = numpy.exp(-1.0 / 2.0 / sigma**2 * ((i_x - c_x)**2 + (i_y - c_y)**2))
-        k = numpy.roll(k, (-c_x, -c_y), axis=(0, 1))
-        k_ = scipy.fftpack.fft2(k)
-        k_ /= k_[0, 0]
-        i_ = scipy.fftpack.fft2(i)
-        i_blur = scipy.fftpack.ifft2(k_ * i_).real
-    elif style == "dct":
-        i_x, i_y = numpy.indices((n_x, n_y))
-        k = numpy.exp(-1.0 / 2.0 / sigma**2 * (i_x**2 + i_y**2))
-        k_ = scipy.fftpack.dctn(k, type=1)
-        k_ /= k_[0, 0]
-        i_ = scipy.fftpack.dctn(i, norm="ortho", type=2)
-        i_blur = scipy.fftpack.idctn(k_ * i_, norm="ortho", type=2)
-    elif style == "dst":
-        i_x, i_y = numpy.indices((n_x, n_y))
-        k = numpy.exp(-1.0 / 2.0 / sigma**2 * (i_x**2 + i_y**2))
-        k_ = scipy.fftpack.dctn(k, type=1)
-        k_ /= k_[0, 0]
-        i_ = scipy.fftpack.dstn(i, norm="ortho", type=2)
-        i_blur = scipy.fftpack.idstn(k_ * i_, norm="ortho", type=2)
-    numpy.random.seed(seed)
-    xi = eta * numpy.random.randn(n_x, n_y)
-    i_degr = i_blur + xi
-    return i_degr
-
-
 def opt_tv_admm(image, sigma, lamda, rho, iters, eps, inv="dct", tv="iso", alpha=1.618, debug=False, truth=None):
     
     f = image

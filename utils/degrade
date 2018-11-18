@@ -1,7 +1,9 @@
+#! /usr/bin/env python
+
 import argparse
 import numpy
-import skimage
-import tv
+import skimage.io
+from utils import degrade
 
 parser = argparse.ArgumentParser(description="Degrade an image")
 parser.add_argument("input", type=str, help="Input filename (should be .bmp)")
@@ -14,5 +16,5 @@ parser.add_argument("--seed", type=int, default=1, help="Random seed (default 1)
 args = parser.parse_args()
 
 i = skimage.io.imread(args.input) / 255.0
-i_degr = tv.calc_degrade(i, args.sigma, args.eta, style=args.style, seed=args.seed)
+i_degr = degrade.calc_degrade(i, args.sigma, args.eta, style=args.style, seed=args.seed)
 skimage.io.imsave(args.output, numpy.clip(i_degr, 0.0, 1.0))

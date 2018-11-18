@@ -1,30 +1,32 @@
+#! /usr/bin/env python
+
 import time
 import argparse
 import numpy
-import skimage
-import tv
+import skimage.io
+import skimage.measure
+import heat
 
-parser = argparse.ArgumentParser(description="Enhance a degraded image")
+parser = argparse.ArgumentParser(description="Denoise a degraded image")
 parser.add_argument("input", type=str, help="Input filename (should be .bmp)")
 parser.add_argument("output", type=str, help="Output filename (should be .bmp)")
-parser.add_argument("--sigma", type=float, default=2.0, help="Size of Gaussian kernel (default 2.0)")
-parser.add_argument("--lamda", type=float, default=2.0e-6, help="Regularization coefficient (default 2.0e-6)")
-parser.add_argument("--rho", type=float, default=2.0e-6, help="Step size of ADMM (default 2.0e-6)")
+parser.add_argument("--mu", type=float, default=1.0/4.0, help="Grid ratio (default 0.25)")
 parser.add_argument("--iters", type=int, default=1000, help="Maximum number of iterations (default 1000)")
-parser.add_argument("--eps", type=float, default=1.0e-3, help="Tolerance (default 1.0e-3)")
-parser.add_argument("--inv", type=str, default="dct", help="Method of calculating inverse: fft, dct (default), dst")
-parser.add_argument("--tv", type=str, default="iso", help="Type of total variation: iso (default), aniso")
-parser.add_argument("--alpha", type=float, default=1.618, help="Acclerative step size of ADMM (default 1.618)")
+parser.add_argument("--stop", type=bool, default=False, help="Automatic stopping criterion (default False)")
 parser.add_argument("--truth", type=str, default=None, help="Ground-truth image for PSNR and SSIM comparison")
 
 args = parser.parse_args()
 
 i_degr = skimage.io.imread(args.input) / 255.0
 start = time.time()
-u, _ = tv.opt_tv_admm(i_degr, args.sigma, args.lamda, args.rho, args.iters, args.eps, inv=args.inv, tv=args.tv, alpha=args.alpha)
+if args.stop:
+    u, ctr = heat.evolve_heat(i_degr, args.mu, args.iters, eps=0.0)
+else:
+    u, ctr = heat.evolve_heat(i_degr, args.mu, args.iters)
 end = time.time()
 skimage.io.imsave(args.output, numpy.clip(u, 0.0, 1.0))
 print("Time: {:.5f}".format(end - start))
+print("Iterations: {}".format(ctr))
 if args.truth is not None:
     i = skimage.io.imread(args.truth) / 255.0
     print("PSNR before: {:.5f}".format(skimage.measure.compare_psnr(i, i_degr)))
