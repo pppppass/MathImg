@@ -5,7 +5,8 @@
 
 
 import numpy
-import skimage
+import skimage.io
+from utils import degrade
 import tv
 
 
@@ -29,7 +30,7 @@ eta = 5.0 / 255.0
 
 for j in range(len(filenames)):
     i = skimage.io.imread("dataset/{}.bmp".format(filenames[j])) / 255.0
-    i_degr = tv.calc_degrade(i, sigma, eta)
+    i_degr = degrade.calc_degrade(i, sigma, eta)
     u, _ = tv.opt_tv_admm(i_degr, sigma, lambdas[j], rhos[j], 1000, 1.0e-3, inv="dct")
     skimage.io.imsave("Figure3{}1.png".format(filenames[j]), numpy.clip(u, 0.0, 1.0))
     print("{} DCT finished".format(filenames[j]))

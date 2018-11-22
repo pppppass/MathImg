@@ -6,7 +6,8 @@
 
 import shelve
 import numpy
-import skimage
+import skimage.io
+from utils import degrade
 import tv
 
 
@@ -42,7 +43,7 @@ rt = [[[], []], [[], []]]
 
 for j in range(len(filenames)):
     i = skimage.io.imread("dataset/{}.bmp".format(filenames[j])) / 255.0
-    i_degr = tv.calc_degrade(i, sigma, eta)
+    i_degr = degrade.calc_degrade(i, sigma, eta)
     rt[j][0].append(skimage.measure.compare_psnr(i, i_degr))
     rt[j][1].append(skimage.measure.compare_ssim(i, i_degr))
     skimage.io.imsave("Figure2{}0.png".format(filenames[j]), numpy.clip(i_degr, 0.0, 1.0))
