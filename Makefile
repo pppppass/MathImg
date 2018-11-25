@@ -15,7 +15,7 @@ environment.yml:
 	conda env export | grep -v prefix > environment.yml
 
 list.txt:
-	ls */*.bmp */*.png > list.txt
+	ls */*.bmp */*.png | grep -v Temporary > list.txt
 
 .PHONY: recursive
 recursive: template

@@ -319,8 +319,3 @@ dataset/peppers.bmp
 dataset/radial.bmp
 dataset/triangle.bmp
 dataset/tsukasa.bmp
-Temporary/euphonium.png
-Temporary/hyouka.png
-Temporary/kemono.png
-Temporary/luckystar.png
-Temporary/yagate.png
