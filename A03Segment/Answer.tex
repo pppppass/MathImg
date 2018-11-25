@@ -1,0 +1,377 @@
+%! TeX encoding = UTF-8
+%! TeX program = LuaLaTeX
+
+\documentclass[english, nochinese]{pnote}
+\usepackage{siunitx}
+\usepackage[paper]{pdef}
+\usepackage{caption}
+\usepackage{biblatex}
+
+\addbibresource{Bibliography.bib}
+
+\DeclareMathOperator\opdiv{\mathrm{div}}
+\DeclareMathOperator\opsgn{\mathrm{sgn}}
+
+\title{Answers to Assignments 3}
+\author{Zhihan Li, 1600010653}
+\date{November 25, 2018}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Problem.} \textit{Answer.} We test the two given level set image segmentation models in the following sections.
+
+\section{Geodesic active contour method}
+
+\subsection{Model}
+
+We adopt the notations of images from Assignment 1. Given an image $i$ defined on the continuous domain $\Omega$ (e.g. $ \sbr{ 0, 1 } \times \sbr{ 0, 1 } $ for square images), our task is to segment $\Omega$ into $K$ and $ \Omega \setminus K $, such that $K$ and $ \Omega \setminus K $ corresponds to different components of $i$. One possible is represent $K$ as the level set of a function defined on $\Omega$, say $u$. Mathematically $ \Omega = \cbr{ \mathbf{x} \in \Omega : u \rbr{\mathbf{x}} > \eta } $ where $\eta$ is a threshold constant. As a result, we may construct partial different equations to evolve $u$.
+
+One model is the geodesic active contour method \parencite{zhao_variational_1996}, which construct the partial differential equation
+\begin{equation} \label{Eq:PDE}
+\frac{ \pd u }{ \pd t } = g \rbr{\abs{ \nabla i }} \abs{ \nabla u } \opdiv \rbr{\frac{ \nabla u }{\abs{ \nabla u }}} + \alpha g \rbr{\abs{ \nabla i }} \abs{ \nabla u } + \nabla g \cdot \nabla u.
+\end{equation}
+Here
+\begin{equation}
+g \rbr{s} = \frac{1}{ 1 + k s^2 }
+\end{equation}
+is the edge indicator function and $\alpha$ is a parameter controlling the scalar speed evolution. The parameter $k$ is to be determined. The term
+\begin{equation} \label{Eq:Part1}
+g \rbr{\abs{ \nabla i }} \abs{ \nabla u } \opdiv \rbr{\frac{ \nabla u }{\abs{ \nabla u }}}
+\end{equation}
+actually stands for the mean curvature flow weighted by $ g \rbr{\abs{ \nabla i }} $, which keeps the boundary of level set smooth. And
+\begin{equation} \label{Eq:Part2}
+\alpha g \rbr{\abs{ \nabla i }} \abs{ \nabla u }
+\end{equation}
+represents the scalar speed motion inwards, and the advection equation
+\begin{equation} \label{Eq:Part3}
+\nabla g \cdot \nabla u
+\end{equation}
+traps level sets onto the edges. The boundary condition is set to be
+\begin{equation}
+\frac{ \pd u }{ \pd \mathbf{n} } = 0
+\end{equation}
+on $ \pd \Omega $ the the $0$-level set initial value
+\begin{equation}
+u \rbr{ \mathbf{x}, 0 } = u^0 \rbr{\mathbf{x}}
+\end{equation}
+should contain the region of interest. We set
+\begin{equation}
+u^0 \rbr{ x, y } = \min \cbr{ -x, x - 1, -y, y - 1 } + \epsilon.
+\end{equation}
+We set $ \epsilon > 0 $ to ensure the $0$-level set is large enough and lies inside $\Omega$. We finally take some terminal time $T$ and set $K$ to be the $0$-level set of $ u \rbr{ \cdot, T } $.
+
+We discretize the equation as follows. In the following argument, we implicitly assume von Neumann boundary condition, say $ u_{ j, 0 } = u_{ j, 1 } $ and $ u_{ j, N } = u_{ j, N = 1 } $ for $ 0 \le j \le M + 1 $ and so for $k$. We denote
+\begin{equation}
+e = g \rbr{\abs{ \nabla i }}
+\end{equation}
+to be the edge indicator function. The $ \nabla i $ term in $e$ is discretized by central difference. Since the term can be expanded as
+\begin{equation}
+\abs{ \nabla u } \opdiv \rbr{\frac{ \nabla u }{\abs{ \nabla u }}} = \frac{ u_{ x x } u_y^2 - 2 u_{ x y } u_x u_y + u_{ y y } u_x^2 }{\abs{ \nabla u }^2},
+\end{equation}
+we discretize the first term in \eqref{Eq:PDE} by central difference. The second term in \eqref{Eq:PDE} is discretized by upwind scheme
+\begin{equation}
+\rbr{ e \abs{ \nabla v } } = \sqrt{
+\begin{aligned}
+&\ptrel{+} \rbr{ \max \cbr{ \rbr{u_x}_{ i - 1 / 2, j }, 0 } }^2 + \rbr{ \min \cbr{ \rbr{u_x}_{ i + 1 / 2, j }, 0 } }^2 \\
+&+ \rbr{ \max \cbr{ \rbr{u_y}_{ i, j - 1 / 2 }, 0 } }^2 + \rbr{ \min \cbr{ \rbr{u_y}_{ i, j + 1 / 2 }, 0 } }^2
+\end{aligned}
+}.
+\end{equation}
+Since the third term in \eqref{Eq:PDE}corresponds to an advection equation, we discretize it using regular upwind scheme.
+
+We reinitalize the numerical solution every some steps. The reinitalization involves solving the equation
+\begin{equation}
+\frac{ \pd v }{ \pd t } + \opsgn u \rbr{ \abs{v} - 1 } = 0
+\end{equation}
+with $ v \rbr{ \mathbf{x}, 0 } = u^m \rbr{\mathbf{x}} $.
+
+\subsection{Numerical result}
+
+We test this segmentation model on six images: \verb"triangle", \verb"objects", \verb"cells", \verb"bird", \verb"lena" and \verb"konata". Due computational issues, we sub-sample the image by averaging every $ 2 \times 2 $ super-pixels. The evolution of level sets are shown in Figure \ref{Fig:Evo}. The parameters are listed in Table \ref{Tbl:Para}. We set $ \epsilon = 0.02 $. We conduct reinitalization 20 steps every 100 itertions.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.16]{Figure01triangle01.png}
+\includegraphics[scale=0.16]{Figure01triangle02.png}
+\includegraphics[scale=0.16]{Figure01triangle03.png}
+\includegraphics[scale=0.16]{Figure01triangle04.png}
+\includegraphics[scale=0.16]{Figure01triangle05.png}
+
+\includegraphics[scale=0.16]{Figure01triangle06.png}
+\includegraphics[scale=0.16]{Figure01triangle07.png}
+\includegraphics[scale=0.16]{Figure01triangle08.png}
+\includegraphics[scale=0.16]{Figure01triangle09.png}
+\includegraphics[scale=0.16]{Figure01triangle10.png}
+
+\includegraphics[scale=0.16]{Figure01objects01.png}
+\includegraphics[scale=0.16]{Figure01objects02.png}
+\includegraphics[scale=0.16]{Figure01objects03.png}
+\includegraphics[scale=0.16]{Figure01objects04.png}
+\includegraphics[scale=0.16]{Figure01objects05.png}
+
+\includegraphics[scale=0.16]{Figure01objects06.png}
+\includegraphics[scale=0.16]{Figure01objects07.png}
+\includegraphics[scale=0.16]{Figure01objects08.png}
+\includegraphics[scale=0.16]{Figure01objects09.png}
+\includegraphics[scale=0.16]{Figure01objects10.png}
+
+\includegraphics[scale=0.16]{Figure01cells01.png}
+\includegraphics[scale=0.16]{Figure01cells02.png}
+\includegraphics[scale=0.16]{Figure01cells03.png}
+\includegraphics[scale=0.16]{Figure01cells04.png}
+\includegraphics[scale=0.16]{Figure01cells05.png}
+
+\includegraphics[scale=0.16]{Figure01cells06.png}
+\includegraphics[scale=0.16]{Figure01cells07.png}
+\includegraphics[scale=0.16]{Figure01cells08.png}
+\includegraphics[scale=0.16]{Figure01cells09.png}
+\includegraphics[scale=0.16]{Figure01cells10.png}
+
+\caption{Evolution of level sets}
+\label{Fig:Evo}
+}
+{
+\footnotesize Images are generated every 2000 iterations.
+}
+\end{figure}
+
+\begin{figure}[htbp]
+{
+\ContinuedFloat
+\centering
+
+\includegraphics[scale=0.16]{Figure01bird01.png}
+\includegraphics[scale=0.16]{Figure01bird02.png}
+\includegraphics[scale=0.16]{Figure01bird03.png}
+\includegraphics[scale=0.16]{Figure01bird04.png}
+\includegraphics[scale=0.16]{Figure01bird05.png}
+
+\includegraphics[scale=0.16]{Figure01bird06.png}
+\includegraphics[scale=0.16]{Figure01bird07.png}
+\includegraphics[scale=0.16]{Figure01bird08.png}
+\includegraphics[scale=0.16]{Figure01bird09.png}
+\includegraphics[scale=0.16]{Figure01bird10.png}
+
+\includegraphics[scale=0.16]{Figure01lena01.png}
+\includegraphics[scale=0.16]{Figure01lena02.png}
+\includegraphics[scale=0.16]{Figure01lena03.png}
+\includegraphics[scale=0.16]{Figure01lena04.png}
+\includegraphics[scale=0.16]{Figure01lena05.png}
+
+\includegraphics[scale=0.16]{Figure01lena06.png}
+\includegraphics[scale=0.16]{Figure01lena07.png}
+\includegraphics[scale=0.16]{Figure01lena08.png}
+\includegraphics[scale=0.16]{Figure01lena09.png}
+\includegraphics[scale=0.16]{Figure01lena10.png}
+
+\includegraphics[scale=0.16]{Figure01konata01.png}
+\includegraphics[scale=0.16]{Figure01konata02.png}
+\includegraphics[scale=0.16]{Figure01konata03.png}
+\includegraphics[scale=0.16]{Figure01konata04.png}
+\includegraphics[scale=0.16]{Figure01konata05.png}
+
+\includegraphics[scale=0.16]{Figure01konata06.png}
+\includegraphics[scale=0.16]{Figure01konata07.png}
+\includegraphics[scale=0.16]{Figure01konata08.png}
+\includegraphics[scale=0.16]{Figure01konata09.png}
+\includegraphics[scale=0.16]{Figure01konata10.png}
+
+\caption{Evolution of level sets (cont.)}
+}
+{
+\footnotesize Images are generated every 1500 iterations for \verb"bird", and 1000 iterations for \verb"lena" and \verb"konata".
+}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+Name & $\alpha$ & $\tau$ & $k$ & \#Iterations & Time (\Si{s}) \\
+\hline
+\input{Table1.tbl}
+\end{tabular}
+\caption{Parameters of the geodesic active contour method}
+\label{Tbl:Para}
+\end{table}
+
+From this figures, we can observe that this model converge very well for the first four images. To be exact, the level set gets shrunk as expected and gradually cover the object of segmentation, and the segmentation task is completed. One should notice that for dark (and blurry) images, say \verb"cells", the boundary of fluorescent cells are hard to determine and therefore the level set become harsh. For very thin objects, for example the character glyphs in \verb"triangle", it is hard for the level set to capture details. This is because the mean curvature flow always shapes the level set to circles. For objects goes across the image boundary, such as the tree branches in \verb"bird", level set fail to capture because of initialization and the Neumann boundary condition. For images with complicated background, edge-based methods like geodesic active contour fails because it may get trapped on the background: the model fails for these images, instead of the algorithm itself.
+
+\subsection{Influence of blurs and noise}
+
+We may also consider blurs and noise on the image. We blur the image with Gaussian kernel of size $ \sigma = 2 $ (on the down-sampled image, which is actually of size $4$ on the original image) or add Gaussian noise of strength $ \eta = 30 / 255 $. The parameters are kept as Table \ref{Tbl:Para}. The evolution of level sets are shown in Figure \ref{Fig:Blur} and Figure \ref{Fig:Noise}.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.16]{Figure03triangle01.png}
+\includegraphics[scale=0.16]{Figure03triangle02.png}
+\includegraphics[scale=0.16]{Figure03triangle03.png}
+\includegraphics[scale=0.16]{Figure03triangle04.png}
+\includegraphics[scale=0.16]{Figure03triangle05.png}
+
+\includegraphics[scale=0.16]{Figure03triangle06.png}
+\includegraphics[scale=0.16]{Figure03triangle07.png}
+\includegraphics[scale=0.16]{Figure03triangle08.png}
+\includegraphics[scale=0.16]{Figure03triangle09.png}
+\includegraphics[scale=0.16]{Figure03triangle10.png}
+
+\includegraphics[scale=0.16]{Figure03bird01.png}
+\includegraphics[scale=0.16]{Figure03bird02.png}
+\includegraphics[scale=0.16]{Figure03bird03.png}
+\includegraphics[scale=0.16]{Figure03bird04.png}
+\includegraphics[scale=0.16]{Figure03bird05.png}
+
+\includegraphics[scale=0.16]{Figure03bird06.png}
+\includegraphics[scale=0.16]{Figure03bird07.png}
+\includegraphics[scale=0.16]{Figure03bird08.png}
+\includegraphics[scale=0.16]{Figure03bird09.png}
+\includegraphics[scale=0.16]{Figure03bird10.png}
+
+\caption{Evolution of level sets on blurred images}
+\label{Fig:Blur}
+}
+{
+\footnotesize Images are generated every 2000 iterations.
+}
+\end{figure}
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.16]{Figure04triangle01.png}
+\includegraphics[scale=0.16]{Figure04triangle02.png}
+\includegraphics[scale=0.16]{Figure04triangle03.png}
+\includegraphics[scale=0.16]{Figure04triangle04.png}
+\includegraphics[scale=0.16]{Figure04triangle05.png}
+
+\includegraphics[scale=0.16]{Figure04triangle06.png}
+\includegraphics[scale=0.16]{Figure04triangle07.png}
+\includegraphics[scale=0.16]{Figure04triangle08.png}
+\includegraphics[scale=0.16]{Figure04triangle09.png}
+\includegraphics[scale=0.16]{Figure04triangle10.png}
+
+\includegraphics[scale=0.16]{Figure04bird01.png}
+\includegraphics[scale=0.16]{Figure04bird02.png}
+\includegraphics[scale=0.16]{Figure04bird03.png}
+\includegraphics[scale=0.16]{Figure04bird04.png}
+\includegraphics[scale=0.16]{Figure04bird05.png}
+
+\includegraphics[scale=0.16]{Figure04bird06.png}
+\includegraphics[scale=0.16]{Figure04bird07.png}
+\includegraphics[scale=0.16]{Figure04bird08.png}
+\includegraphics[scale=0.16]{Figure04bird09.png}
+\includegraphics[scale=0.16]{Figure04bird10.png}
+
+\caption{Evolution of level sets on images with Gaussian noise}
+\label{Fig:Noise}
+}
+{
+\footnotesize Images are generated every 2000 iterations.
+}
+\end{figure}
+
+From these figures, we discover that blurs introduce ambiguity to the boundary of image components. Generally the segmentation boundary gets dilated compared to Figure \ref{Fig:Evo} and therefore larger. However, for \verb"triangle", the characters are glued together in the segmentation result. As a whole, blurs changes the gradient structure near boundary of objects and therefore damage the numerical results. For noise, we can find obviously that the level sets get stuck at the very boundary of image. This is because the edge indicator $ e = g \rbr{\abs{ \nabla i }} $ fails to recognize these noise and take them as edges by mistake. Therefore the mean curvature term and the scalar speed motion term are dropped and therefore the evolution gets stuck. In one word, this model is very sensitive to noise.
+
+\section{The convexified Chan--Vese model}
+
+Another possible partial differential equation based on the binary assumption of the image: the image is composed of two parts with color difference. Assume the two parts have $ c_1, c_2 $ as mean, Chan and Vese \parencite{goldstein_geometric_2010} constructs the partial differential equation
+\begin{equation}
+u_t = \opdiv \rbr{\frac{ \nabla u }{\abs{ \nabla u }}} - \mu \rbr{ \rbr{ c_1 - i }^2 - \rbr{ c_2 - i }^2 }.
+\end{equation}
+A convex variational relax of this equation can be found, that is
+\begin{equation}
+\min_{ 0 \le u \le 1 } \int_{\Omega} \abs{ \nabla u } + \mu \int_{\Omega} \rbr{ \rbr{ c_1 - i }^2 + \rbr{ c_2 - i }^2 } u.
+\end{equation}
+The discretization is
+\begin{equation}
+\min_{ 0 \le u \le 1 } \abs{ \nabla u } + \mu r^{\text{T}} u,
+\end{equation}
+where $r$ is the vector
+\begin{equation}
+r = \rbr{ c_1 - i }^2 - \rbr{ c_2 - i }^2.
+\end{equation}
+The optimization problem can be solve by PDHG (primal dual hybrid gradient). By introducing $ v = \nabla u $, we get
+\begin{equation}
+\mathcal{L} \rbr{ u, v, p } = \abs{v} + \mu r^{\text{T}} u + p^{\text{T}} \rbr{ v - \nabla u } + I_{\sbr{ 0, 1 }} \rbr{u}.
+\end{equation}
+Optimizing $v$ first, we obtain
+\begin{equation}
+\min_v \mathcal{L} \rbr{ u, v, p } = \mu r^{\text{T}} u - p^{\text{T}} \nabla u + I_{\sbr{ 0, 1 }} \rbr{u} - I_{\sbr{ -1, 1 }} \rbr{\abs{p}}.
+\end{equation}
+As a result, the optimization procedure consists of
+\begin{equation}
+u^{\rbr{ k + 1 }} = P_{\sbr{ 0, 1 }} \rbr{ u^{\rbr{k}} - \alpha \rbr{ \mu r - \nabla^{\text{T}} p^{\rbr{k}} } }
+\end{equation}
+and
+\begin{equation}
+p^{\rbr{ k + 1 }} = \mathcal{P}_1 \rbr{ p^{\rbr{k}} - \beta \nabla u^{\rbr{ k + 1 }} }.
+\end{equation}
+Here the second projection $ \mathcal{P}_1 $ is the vector-wise project: it keeps the direction of the vector and then shrink its length to $1$. After the PDHG iterations converge, we threshold $u$ by $ 1 / 2 $ to get $K$, namely the $ 1 / 2 $-level set of $u$. We then recalculate $c_1$ and $c_2$ by means of $i$ in $K$ and $ \Omega \setminus K $. We go over another PDHG iterations iteratively.
+
+\subsection{Numerical result}
+
+In real practice, we take $ \alpha = \beta = 3 \times 10^{-4} $. Since the iteration converges rapidly, we only proceed 30 iterations for the inner loop (PDHG), and again 30 iterations for the outer loop (update of $c_1$ and $c_2$). The segmentation results are given in Figure \ref{Fig:Res}. Parameters of the algorithm are shown in Table \ref{Tbl:CV}.
+
+\begin{figure}[htbp]
+\centering
+
+\includegraphics[scale=0.4]{Figure02triangle.png}
+\includegraphics[scale=0.4]{Figure02objects.png}
+
+\includegraphics[scale=0.4]{Figure02cells.png}
+\includegraphics[scale=0.4]{Figure02bird.png}
+
+\includegraphics[scale=0.4]{Figure02lena.png}
+\includegraphics[scale=0.4]{Figure02konata.png}
+
+\caption{Segmentation results of the convexified Chan--Vese model}
+\label{Fig:Res}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Name & $\mu$ & Init. $c_1$ & Init. $c_2$ & Fin. $c_1$ & Fin. $c_2$ & Time (\Si{s}) \\
+\hline
+\input{Table2.tbl}
+\end{tabular}
+\caption{Parameters of the convexified Chan--Vese model}
+\label{Tbl:CV}
+\end{table}
+
+From these figures, we can observe that the convexified Chan--Vese model works well on images with high-contrast foreground and background, such as \verb"triangle", \verb"cells" and \verb"bird". However, we may also observe that some light color pieces get missing and on the contrary some dark color pieces get involved by mistake, for example, some cells in \verb"cell" and dark colors on the corner in \verb"bird". For images with complicated textures and colors the model fails as the model is a \emph{binary} segmentation model.
+
+\subsection{Influence of blurs and noise}
+
+We also consider the influence of blurs and noise for the convexified Chan--Vese model. We degrade the image identically as in the previous section, and keep parameters of the convexified Chan--Vese model as in Table \ref{Tbl:CV}. The numerical results are shown in Figure \ref{Fig:BlurNoise}.
+
+\begin{figure}[htbp]
+\centering
+
+\includegraphics[scale=0.4]{Figure05triangle.png}
+\includegraphics[scale=0.4]{Figure05bird.png}
+
+\includegraphics[scale=0.4]{Figure06triangle.png}
+\includegraphics[scale=0.4]{Figure06bird.png}
+
+\caption{Segmentation results for blurred images or images with Gaussian noise}
+\label{Fig:BlurNoise}
+\end{figure}
+
+It can be clearly seen that the convexified Chan--Vese model is robust to noise. This is because the model does not rely on the gradient of the image. However for blurs this model fails to capture some details, for example the characters in \verb"triangle" and thin tree branches in \verb"bird". The binary assumption accounts for this because the intensity get decreased and therefore they are easier to be clustered in the wrong way.
+
+\subsection{Discussion}
+
+We compare and discuss the distinction between the geodesic active contour model and convexified Chan--Vese model in this section. As told in the previous sections, the geodesic active contour model is an \emph{edge}-based model, which heavily relies on the gradient structure of edges. It can capture objects with colored interior and even complicated topology, as long as the gradient of the boundary near the objects is distinguishable. This also explains the sensitivity of the geodesic active contour method. However, the Chan--Vese model is a model based on \emph{intensity}. It does not relies on the gradient of the image and can directly capture holes in the interior of objects. It is also robust to noise but not blurs. This is exactly the main difference between two models. If we randomly permute the color space of an image, the geodesic active contour model may still works, but the convexified Chan--Vese model is more likely to fail. Additionally, the geodesic active contour methods involves evolution of the level sets, and is therefore more expensive than the convexified Chan--Vese model, which only solves a (not so difficult) optimization problem and then carry on simple iterations.
+
+\printbibliography
+
+\end{document}

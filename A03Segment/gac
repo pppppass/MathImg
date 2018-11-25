@@ -1,0 +1,35 @@
+#! /usr/bin/env python
+
+import time
+import argparse
+import numpy
+import skimage.io
+from matplotlib import pyplot
+import gac
+
+parser = argparse.ArgumentParser(description="Segment an image")
+parser.add_argument("input", type=str, help="Input filename (should be .bmp)")
+parser.add_argument("output", type=str, help="Output filename")
+parser.add_argument("--alpha", type=float, default=100.0, help="Coefficient of scalar motion (default 100.0)")
+parser.add_argument("--tau", type=float, default=1.0e-7, help="Time step (default 1.0e-7)")
+parser.add_argument("--edge", type=float, default=0.3, help="Coefficient $k$ for edge indicator (default 0.3)")
+parser.add_argument("--eps", type=float, default=0.02, help="Small positive number for initialization (default 0.02)")
+parser.add_argument("--iters", type=int, default=1000, help="Number of iterators (default 1000)")
+parser.add_argument("--reinit_freq", type=int, default=100, help="Frequency of reinitialization (default 100)")
+parser.add_argument("--reinit_step", type=int, default=29, help="Number of steps of reinitialization (default 20)")
+
+args = parser.parse_args()
+
+i = skimage.io.imread(args.input) / 255.0
+start = time.time()
+u = gac.calc_init(i, args.eps)
+u = gac.evolve_gac(i, args.alpha, args.tau, args.edge, args.iters, (args.reinit_freq, args.reinit_step), u)
+end = time.time()
+pyplot.figure(figsize=(8.0, 8.0))
+pyplot.imshow(i, cmap="gray", vmin=0.0, vmax=1.0)
+pyplot.axis("off")
+pyplot.contour(u, [0.0], colors="red")
+pyplot.savefig(args.output, bbox_inches="tight")
+pyplot.show()
+pyplot.close()
+print("Time: {:.5f}".format(end - start))
