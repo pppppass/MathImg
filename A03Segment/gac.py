@@ -117,10 +117,10 @@ def evolve_gac(image, alpha, tau, edge, iters, reinit, func):
         s = alpha * e * numpy.sqrt(s)
         
         t = numpy.zeros((n_x, n_y))
-        t[1:, :] += numpy.maximum(e_x[1:, :], 0.0) * u_xd
-        t[:-1, :] += numpy.minimum(e_x[:-1, :], 0.0) * u_xd
-        t[:, 1:] += numpy.maximum(e_y[:, 1:], 0.0) * u_yd
-        t[:, :-1] += numpy.minimum(e_y[:, :-1], 0.0) * u_yd
+        t[1:, :] += numpy.minimum(e_x[1:, :], 0.0) * u_xd
+        t[:-1, :] += numpy.maximum(e_x[:-1, :], 0.0) * u_xd
+        t[:, 1:] += numpy.minimum(e_y[:, 1:], 0.0) * u_yd
+        t[:, :-1] += numpy.maximum(e_y[:, :-1], 0.0) * u_yd
     
         u += tau * (l + s + t)
         

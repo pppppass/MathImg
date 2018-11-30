@@ -13,7 +13,7 @@ from utils import downsamp
 import gac
 
 
-# In[27]:
+# In[7]:
 
 
 filename_list = [
@@ -64,7 +64,7 @@ len_list = [
 rt = [{}]
 
 
-# In[28]:
+# In[8]:
 
 
 for j, filename in enumerate(filename_list):
@@ -90,7 +90,7 @@ for j, filename in enumerate(filename_list):
     rt[0][filename] = elapsed
 
 
-# In[29]:
+# In[ ]:
 
 
 with shelve.open("Result") as db:
