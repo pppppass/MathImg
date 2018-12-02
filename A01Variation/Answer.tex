@@ -113,7 +113,7 @@ For faster convergence, the initial $u^{\rbr{0}}$ is set to be $f$, with $ v^{\r
 
 We test this algorithm on three categories of images, namely ``classical'', ``geometric'' and ``Anime''. The names of these images have been given and can be directly lookup up in the \verb"dataset" folder. The categories of images are listed in Table \ref{Tbl:Cat}.
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|}
 \hline
@@ -141,7 +141,7 @@ Category & Name \\
 
 In the generation of degraded images $f$, the Gaussian filter from scikit-image, namely the function \verb"skimage.filters.gaussian" has been used. Here $\sigma$ are set to be 2 and $\eta$ $ \text{5.0} / 255 $ if not otherwise specified. The total variation is chosen to be the isotropic one. The inverse are calculated by DCT. The stopping criterion $\epsilon$ is set to be $10^{-3}$. The numerical results are listed in Table \ref{Tbl:Num}.
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|}
 \hline
@@ -163,7 +163,7 @@ Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
 
 Some images are shown in Figure \ref{Fig:Num}. The images are clipped from $u^{\rbr{k}}$ to $ \sbr{ 0, 1 } $ and then scaled (by 255) to grayscale.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -207,7 +207,7 @@ It can be seen from the numerical results and images that the total variation mo
 
 We investigate the role of $\lambda$ by scaling it by power of 2. The qualitative results can be seen in Figure \ref{Fig:Lambda} and quantitative results are shown in Table \ref{Tbl:Lambda}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -235,7 +235,7 @@ We investigate the role of $\lambda$ by scaling it by power of 2. The qualitativ
 }
 \end{figure}
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline
@@ -264,7 +264,7 @@ which prefers piece-wise constant, dominates. Choosing a suitable $\lambda$ is n
 
 We use DCT to compute the inverse in \eqref{Eq:ItU} in the previous experiments, which induces Neumann boundary condition automatically. To investigate the boundary effects of the discretization, we instead apply FFT and DST here, which induce cyclic boundary and Dirichlet boundary. We use $ \lambda = \text{2.00e-6} $ and $ \rho = \text{2.00e-6} $ throughout the experiment. The images are shown in Figure \ref{Fig:Bound}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -292,7 +292,7 @@ We should also point out that the key is the \emph{match} between the boundary c
 
 We apply isotropic total variation in the previous experiments. Here we change to the anisotropic one to investigate the difference. We use $ \lambda = \text{2.00e-6} $ and $ \rho = \text{2.00e-6} $ throughout the experiment. The images are shown in Figure \ref{Fig:Iso}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -336,7 +336,7 @@ Noticing that the model may diverge, we take an average on $u^{\rbr{k}}$ by defi
 \end{equation}
 and provide $\overline{u}^{\rbr{k}}$ as the final output, as suggested by \parencite{dong_efficient_2013}. The qualitative results can be seen in Figure \ref{Fig:L0} and quantitative results are shown in Table \ref{Tbl:L0}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -364,7 +364,7 @@ and provide $\overline{u}^{\rbr{k}}$ as the final output, as suggested by \paren
 }
 \end{figure}
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline

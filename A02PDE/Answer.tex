@@ -78,7 +78,7 @@ We need to point out that the notation we used is the standard numerical partial
 
 We use the same dataset as described in Assignment 1. We add additive noise with strength $ \eta = 20.0 /255 $ if not otherwise specified. We set $ \mu = 1 / 10 $ here to gain a more precise control of the heat kernel. This is because for any $m$, $U^m$ approximate the solution at $ t = m \tau = m \mu h^2 $ and the size of convolution kernel is $ \sqrt{ 2 m \mu } $ pixels. And small $\mu$ (with slightly larger $m$) means we may control the that size better. Additionally, when $ m \mu $ is fixed, larger $\mu$ means the discrete kernel has a larger support and therefore the noise may be removed in a better sense. The final step size is chosen manually to achieve a better visual quality. The numerical results are listed in Table \ref{Tbl:Heat}.
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
@@ -100,7 +100,7 @@ Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
 
 Some images are shown in Figure \ref{Fig:Heat}. The images are clipped from $u^{\rbr{k}}$ to $ \sbr{ 0, 1 } $ and then scaled (by 255) to grayscale if not otherwise specified.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -142,7 +142,7 @@ We can see from this numerical results that heat equation can indeed remove the 
 
 We observe the dynamic of heat equation by varying the termination time $T$ or equivalently the termination $m$. We take $ \mu = 1 / 100 $ here. The qualitative results can be seen in Figure \ref{Fig:HeatDyn} and quantitative results are given in Table \ref{Tbl:HeatDyn}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -178,7 +178,7 @@ We observe the dynamic of heat equation by varying the termination time $T$ or e
 }
 \end{figure}
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline
@@ -257,7 +257,7 @@ and $T$, $N$ are tangent direction and normal direction defined by $ \nabla u $.
 
 We take $ \mu = 1 / 4 $ and exhibit the numerical results in Figure \ref{Fig:Smooth} and Table \ref{Tbl:Smooth}. The final $T$ is chosen according to Subsection \ref{SubSec:Stop}.
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|}
 \hline
@@ -277,7 +277,7 @@ Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
 \label{Tbl:Smooth}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -311,7 +311,7 @@ It can be seen from the results that this smoothing equation outperforms the hea
 
 We observe the dynamic of smoothing equation by varying the termination time $T$ or equivalently the termination $m$. We set $ \mu = 1 / 4 $ here. The qualitative results can be seen in Figure \ref{Fig:SmoothDyn} and quantitative results are given in Table \ref{Tbl:SmoothDyn}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -347,7 +347,7 @@ We observe the dynamic of smoothing equation by varying the termination time $T$
 }
 \end{figure}
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline
@@ -385,7 +385,7 @@ for large $ s \ge K $. This model can performs denoising and deblurring simultan
 
 We first test the denosing problem with $ \eta = 20.0 / 255 $. We take $ \mu = 1 / 4 $ and show the numerical results in Figure \ref{Fig:PM} and Table \ref{Tbl:PM}. Here $K$ is set to be $100$. The final $T$ is chosen according to Subsection \ref{SubSec:Stop}.
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|}
 \hline
@@ -405,7 +405,7 @@ Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
 \label{Tbl:PM}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -437,7 +437,7 @@ It can be seen from the results that this smoothing equation outperforms the hea
 
 We then test Perona and Malik equation on images with both blurs and noise. We take $ \sigma = 2.0 $ and $ \eta = 5.0 / 255 $. Here $K$ is kept to be $100$ and $ \mu = 1 / 4 $. The numerical results are shown in Table \ref{Tbl:PMEnh} and Figure \ref{Fig:PMEnh}. Here $T$ or say $m$ is chosen manually.
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|}
 \hline
@@ -457,7 +457,7 @@ Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
 \label{Tbl:PMEnh}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -491,7 +491,7 @@ We can see that the Perona and Malik equation can indeed recover some blur image
 
 We observe the dynamic of Perona and Malik equation by varying the termination time $T$ or equivalently the termination $m$. We set $ \mu = 1 / 4 $ here. Here $K$ is set to be $100$. The qualitative results can be seen in Figure \ref{Fig:PMDyn} and quantitative results are given in Table \ref{Tbl:PMDyn}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -527,7 +527,7 @@ We observe the dynamic of Perona and Malik equation by varying the termination t
 }
 \end{figure}
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline
@@ -562,7 +562,7 @@ T = \mathop{\arg\min}_{t_m} \abs{C_{t_m}}.
 
 To verify the selection of such $T$, we test $C_t$, PSNR and SSIM on two images. We choose $ \mu = 1 / 4 $ and use Perona and Malik equation with $ K = 100 $. The results are shown in Figure \ref{Fig:Corr}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 \centering
 \scalebox{0.75}{\input{Figure12.pgf}}
 \caption{Curves of $C_t$, PSNR and SSIM}
@@ -642,7 +642,7 @@ which corresponds to the second derivative of $u$ in the direction of $ \nabla u
 
 We set the size of blur kernel to be $ \sigma = 2.0 $. The grid ratio $\nu$ is chosen to be $ 1 / 10 $. The numerical results are listed in Table \ref{Tbl:Shock}.
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|}
 \hline
@@ -664,7 +664,7 @@ Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
 
 Some images are shown in Figure \ref{Fig:Shock}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -706,7 +706,7 @@ We can see from this numerical results that the shock wave filter can indeed per
 
 We observe the dynamic of the shock wave equation by varying the termination time $T$ or equivalently the termination $m$. We take $ \nu = 1 / 40 $ here. The qualitative results can be seen in Figure \ref{Fig:ShockDyn} and quantitative results are given in Table \ref{Tbl:ShockDyn}.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -734,7 +734,7 @@ We observe the dynamic of the shock wave equation by varying the termination tim
 }
 \end{figure}
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline
@@ -759,7 +759,7 @@ L_2 = u_{ x x } + u_{ y y }.
 \end{equation}
 We compare the distinction between $L_1$ in \eqref{Eq:Curve} and $L_2$ in Figure \ref{Fig:DiffL}. We take $ \nu = 1 / 40 $ and $ m = 80 $ here.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
@@ -784,7 +784,7 @@ From these images, we can see that final images from $L_2$ has smoother edges th
 We may change our model and add additive noise of strength $ \eta = 5.0 / 255 $ into the image.
 We investigate the difference in Figure \ref{Fig:Noise}. We take $ \nu = 1 / 40 $ and $ m = 80 $ here.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 {
 \centering
 
