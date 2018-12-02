@@ -21,13 +21,14 @@ parser.add_argument("--eps", type=float, default=5.0e-4, help="Stoping criterion
 parser.add_argument("--style", type=str, default="swt", help="Wavelet transform: swt(default), dwt")
 parser.add_argument("--bound", type=str, default="periodization", help="Signal extension mode, see documentation of PyWavelets (default periodization)")
 parser.add_argument("--fold", type=bool, default=False, help="Whether perform symmetric extension (default False)")
+parser.add_argument("--nesterov", type=bool, default=False, help="Nesterov momentum (default False)")
 parser.add_argument("--truth", type=str, default=None, help="Ground-truth image for PSNR and SSIM comparison")
 
 args = parser.parse_args()
 
 i_degr = skimage.io.imread(args.input) / 255.0
 start = time.time()
-u, ctr = balance.opt_balance_prox(i_degr, args.sigma, args.lamda, args.kappa, args.wavelet, args.level, args.gamma, args.iters, args.eps, wavelet_style=args.style, bound=args.bound, fold=args.fold)
+u, ctr = balance.opt_balance_prox(i_degr, args.sigma, args.lamda, args.kappa, args.wavelet, args.level, args.gamma, args.iters, args.eps, wavelet_style=args.style, bound=args.bound, fold=args.fold, nesterov=args.nesterov)
 end = time.time()
 skimage.io.imsave(args.output, numpy.clip(u, 0.0, 1.0))
 print("Time: {:.5f}".format(end - start))
