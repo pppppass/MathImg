@@ -1,0 +1,40 @@
+#! /usr/bin/env python
+
+import time
+import argparse
+import numpy
+import skimage.io
+import skimage.measure
+import balance
+
+parser = argparse.ArgumentParser(description="Enhance a degraded image")
+parser.add_argument("input", type=str, help="Input filename (should be .bmp)")
+parser.add_argument("output", type=str, help="Output filename (should be .bmp)")
+parser.add_argument("--sigma", type=float, default=2.0, help="Size of Gaussian kernel (default 2.0)")
+parser.add_argument("--lamda", type=float, default=0.003, help="Regularization coefficient (default 0.003)")
+parser.add_argument("--kappa", type=float, default=0.3, help="Balance coefficient (default 0.3)")
+parser.add_argument("--wavelet", type=str, default="db6", help="Name of wavelet (default db6)")
+parser.add_argument("--level", type=int, default=4, help="Levels of wavelet transform (default 4)")
+parser.add_argument("--gamma", type=float, default=0.2, help="Step size (default 0.2)")
+parser.add_argument("--iters", type=int, default=1000, help="Maximum number of itertions (default 1000)")
+parser.add_argument("--eps", type=float, default=5.0e-4, help="Stoping criterion (default 5.0e-4)")
+parser.add_argument("--style", type=str, default="swt", help="Wavelet transform: swt(default), dwt")
+parser.add_argument("--bound", type=str, default="periodization", help="Signal extension mode, see documentation of PyWavelets (default periodization)")
+parser.add_argument("--fold", type=bool, default=False, help="Whether perform symmetric extension (default False)")
+parser.add_argument("--truth", type=str, default=None, help="Ground-truth image for PSNR and SSIM comparison")
+
+args = parser.parse_args()
+
+i_degr = skimage.io.imread(args.input) / 255.0
+start = time.time()
+u, ctr = balance.opt_balance_prox(i_degr, args.sigma, args.lamda, args.kappa, args.wavelet, args.level, args.gamma, args.iters, args.eps, wavelet_style=args.style, bound=args.bound, fold=args.fold)
+end = time.time()
+skimage.io.imsave(args.output, numpy.clip(u, 0.0, 1.0))
+print("Time: {:.5f}".format(end - start))
+print("Iterations: {}".format(ctr))
+if args.truth is not None:
+    i = skimage.io.imread(args.truth) / 255.0
+    print("PSNR before: {:.5f}".format(skimage.measure.compare_psnr(i, i_degr)))
+    print("PSNR after: {:.5f}".format(skimage.measure.compare_psnr(i, u)))
+    print("SSIM before: {:.5f}".format(skimage.measure.compare_ssim(i, i_degr)))
+    print("SSIM after: {:.5f}".format(skimage.measure.compare_ssim(i, u)))

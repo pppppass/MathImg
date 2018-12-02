@@ -95,12 +95,13 @@ def opt_tv_admm(image, sigma, lamda, rho, iters, eps, inv="dct", tv="iso", alpha
     n_x, n_y = f.shape
     u = f
     v = grad(u)
-    if inv == "fft":
-        p = numpy.zeros((n_x, n_y, 2))
-    elif inv == "dct":
-        p = numpy.zeros((n_x, n_y, 2))
-    elif inv == "dst":
-        p = numpy.zeros((n_x+1, n_y+1, 2))
+#     if inv == "fft":
+#         p = numpy.zeros((n_x, n_y, 2))
+#     elif inv == "dct":
+#         p = numpy.zeros((n_x, n_y, 2))
+#     elif inv == "dst":
+#         p = numpy.zeros((n_x+1, n_y+1, 2))
+    p = numpy.zeros_like(v)
     
     if inv == "fft":
         c_x, c_y = n_x // 2, n_y // 2
