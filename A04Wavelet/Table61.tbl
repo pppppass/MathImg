@@ -1,0 +1,6 @@
+Wavelet & \verb"haar" & \verb"db2" & \verb"db6" & \verb"sym8" & \verb"coif2" & \verb"bior2.6" \\
+\hline
+PSNR (\Si{dB}) & 30.26609 & 30.35149 & 30.38416 & 30.39706 & 30.46208 & 30.40003 \\
+\hline
+SSIM & 0.91538 & 0.92169 & 0.92100 & 0.92106 & 0.92249 & 0.92118 \\
+\hline

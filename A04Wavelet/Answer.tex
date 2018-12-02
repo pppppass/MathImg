@@ -1,0 +1,565 @@
+%! TeX encoding = UTF-8
+%! TeX program = LuaLaTeX
+
+\documentclass[english, nochinese]{pnote}
+\usepackage{siunitx}
+\usepackage[paper]{pdef}
+
+\DeclareMathOperator\opprox{\mathrm{prox}}
+
+\title{Answers to Assignments 4}
+\author{Zhihan Li, 1600010653}
+\date{December 2, 2018}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Problem 1.} \textit{Answer.} We test the wavelet-based analysis model and balance model for image enhancement in the following section.
+
+\section{Analysis model}
+
+We adopt notations from previous assignments. We aim to restore the image $u$ from the degradation model
+\begin{equation}
+u = A f + \xi
+\end{equation}
+where $A$ is a Gaussian blur kernel of size $\sigma$ and $ \xi \sim \mathcal{N} \rbr{ 0, \eta } $.
+
+We apply a wavelet-based analysis model to solve the problem. The variational problem can be written as
+\begin{equation}
+\frac{1}{2} \int \rbr{ f - A u }^2 + \int \abs{ \lambda \cdot W u }
+\end{equation}
+where $W$ is the wavelet analysis operator. It can be discretize as
+\begin{equation}
+J = \frac{1}{2} \norm{ f - A u }_2^2 + \abs{ \lambda \cdot W u }.
+\end{equation}
+The wavelet analysis operator $W$ and the synthesis operator $W^{\text{T}}$ are discretized by stationary wavelet transform and its inverse. By introducing $ v = \nabla u $, the optimization problem is
+\begin{equation}
+\begin{array}{ll}
+\text{minimize} & \norm{ f - A u }_2^2 / 2 + \abs{ \lambda \cdot v }; \\
+\text{subject to} & v = W u.
+\end{array}
+\end{equation}
+We apply ADMM (alternating direction method of multipliers) here, by alternatively descending according to the augmented Lagrangian
+\begin{equation}
+L \rbr{ u, v, p } = \frac{1}{2} \norm{ f - A u }_2^2 + \abs{ \lambda \cdot v } + p^{\text{T}} \rbr{ v - W u } + \frac{\rho}{2} \norm{ v - W u }_2^2,
+\end{equation}
+where $p$ is the dual variable. The iteration steps of $u$ is
+\begin{equation}
+\begin{split}
+u^{\rbr{ k + 1 }} &= \mathop{\arg\min}_u \rbr{ \frac{1}{2} \norm{ f - A u }_2^2 + \rbr{p^{\rbr{k}}}^{\text{T}} \rbr{ v^{\rbr{k}} - W u } + \frac{\rho}{2} \norm{ v^{\rbr{k}} - W u }_2^2 } \\
+&= \rbr{ A^{\text{T}} A + \rho I }^{-1} \rbr{ A^{\text{T}} f + W^{\text{T}} p^{\rbr{k}} + \rho W^{\text{T}} v^{\rbr{k}} }
+\end{split}
+\end{equation}
+by noticing that
+\begin{equation}
+W^{\text{T}} W = I
+\end{equation}
+for wavelet, which forms a tight frame, operator $W$. We apply DCT (discrete cosine transform) to solve this equation. The iteration steps of $v$ is
+\begin{equation}
+\begin{split}
+v^{\rbr{ k + 1 }} &= \mathop{\arg\min}_v \rbr{ \abs{ \lambda \cdot v } + \rbr{p^{\rbr{k}}}^{\text{T}} \rbr{ v - W u^{\rbr{ k + 1 }} } + \frac{\rho}{2} \norm{ v - W u^{\rbr{ k + 1 }} }_2^2 } \\
+&= \mathcal{S}_{ \lambda / \rho } \rbr{ \nabla u^{\rbr{ k + 1 }} - \frac{1}{\rho} p^{\rbr{k}} },
+\end{split}
+\end{equation}
+where $\mathcal{S}$ is the soft shrinkage function, which is
+\begin{equation}
+\rbr{ \mathcal{S}_t \rbr{v} }_{ i, j } = \rbr{ v_{ i, j }^1, v_{ i, j }^2 } \frac{ \phi_{t_{ i, j }} \rbr{\norm{v_{ i, j }}_2} }{\norm{v_{ i, j }}_2}
+\end{equation}
+where
+\begin{equation}
+\phi_t \rbr{x} = \max \cbr{ x - t, 0 }.
+\end{equation}
+The iteration steps of $p$ is
+\begin{equation}
+p^{\rbr{ k + 1 }} = p^{\rbr{k}} + \alpha \rho \rbr{ v^{\rbr{ k + 1 }} - W u^{\rbr{ k + 1 }} }
+\end{equation}
+where $\alpha$ is the accelerative step size. The stopping criterion looks at the duality gap, says
+\begin{equation}
+\frac{\norm{ v - W u }}{\norm{f}} < \epsilon.
+\end{equation}
+For faster convergence, the initial $u^{\rbr{0}}$ is set to be $f$, with $ v^{\rbr{0}} = W f $ and $ p^{\rbr{0}} = 0 $.
+
+\subsection{Numerical result}
+
+We verify this model with parameters $ \sigma = 2 $, $ \eta = 5.0 / 255 $ in the degradation model if not otherwise specified. We use \verb"pywt.swt", namely the stationary wavelet transform in PyWavelets package to generate the wavelet operator. We apply 4 levels of wavelet transform here, and $\lambda$ are identical for each level. The rationale of this strategy is that coefficients in deeper levels generally stands for more complicated structure, and relatively the threshold effect should be smaller. We should note that \verb"pywt.swt" automatically multiply either low or high frequency component by $2$. For the notation $ \lambda \cdot W $, this means the low component has $ \lambda_i = 0 $ while the high components $ \lambda_i \equiv \lambda $ (with a little abuse of notation) is a constant. Here $\alpha$ is fixed to 1.618. The stopping criterion $\epsilon$ is selected to be 5e-5. The numerical results are shown in Figure \ref{Fig:Ana} and Table \ref{Tbl:Ana}.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure1barbara0.png}
+\includegraphics[scale=0.2]{Figure1barbara1.png}
+\includegraphics[scale=0.2]{Figure1barbara2.png}
+
+\includegraphics[scale=0.2]{Figure1boats0.png}
+\includegraphics[scale=0.2]{Figure1boats1.png}
+\includegraphics[scale=0.2]{Figure1boats2.png}
+
+\includegraphics[scale=0.2]{Figure1lena0.png}
+\includegraphics[scale=0.2]{Figure1lena1.png}
+\includegraphics[scale=0.2]{Figure1lena2.png}
+
+\includegraphics[scale=0.2]{Figure1gradient0.png}
+\includegraphics[scale=0.2]{Figure1gradient1.png}
+\includegraphics[scale=0.2]{Figure1gradient2.png}
+
+\includegraphics[scale=0.2]{Figure1triangle0.png}
+\includegraphics[scale=0.2]{Figure1triangle1.png}
+\includegraphics[scale=0.2]{Figure1triangle2.png}
+
+\includegraphics[scale=0.2]{Figure1tsukasa0.png}
+\includegraphics[scale=0.2]{Figure1tsukasa1.png}
+\includegraphics[scale=0.2]{Figure1tsukasa2.png}
+
+\caption{Images of analysis model}
+\label{Fig:Ana}
+}
+{
+\footnotesize Left: original image $u$; middle: degraded image $f$; right: enhanced image $u^{\rbr{k}}$.
+}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+Name & $\lambda$ & $\rho$ & Wavelet & \#Iterations & Time (\Si{s}) \\
+\hline
+\input{Table11.tbl}
+\end{tabular}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{c|}{ PSNR (\Si{dB}) } & \multicolumn{3}{c|}{SSIM} \\
+\hline
+Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
+\hline
+\input{Table12.tbl}
+\end{tabular}
+\caption{Numerical results of analysis model}
+\label{Tbl:Ana}
+\end{table}
+
+It can be seen directly that the analysis model partially succeeds in the image enhancement task. There are still difficulties to restore images with complicated textures, where \verb"barbara" is an example. Some artifacts can be observed, which is related to the wavelet we use. For example, for images using \verb"db6" wavelet, some ripples can be observed. For images using \verb"haar" wavelet, there are still blocks of spots distributed over the image. The star in \verb"triangle" is a great example. The connection points of the triangles are substituted by gray blocks.
+
+\subsection{The role of $\lambda$}
+
+We then investigate the the role of $\lambda$ by varying it. We take \verb"lena" and \verb"tsukasa" for example. The wavelets are selected to be \verb"db6" and \verb"haar" respectively. Here $\rho$ is fixed to 1.0. The qualitative results are shown in Figure \ref{Fig:AnaLam} and quantitative results are shown in Table \ref{Tbl:AnaLam}.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure4lena0.png}
+\includegraphics[scale=0.2]{Figure4lena1.png}
+\includegraphics[scale=0.2]{Figure4lena2.png}
+
+\includegraphics[scale=0.2]{Figure4lena3.png}
+\includegraphics[scale=0.2]{Figure4lena4.png}
+\includegraphics[scale=0.2]{Figure4lena5.png}
+
+\includegraphics[scale=0.2]{Figure4tsukasa0.png}
+\includegraphics[scale=0.2]{Figure4tsukasa1.png}
+\includegraphics[scale=0.2]{Figure4tsukasa2.png}
+
+\includegraphics[scale=0.2]{Figure4tsukasa3.png}
+\includegraphics[scale=0.2]{Figure4tsukasa4.png}
+\includegraphics[scale=0.2]{Figure4tsukasa5.png}
+
+\caption{Images of different $\lambda$ of the analysis model}
+\label{Fig:AnaLam}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:AnaLam}.
+}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table31.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table32.tbl}
+\end{tabular}
+\caption{Effects of different $\lambda$ of the analysis model}
+\label{Tbl:AnaLam}
+\end{table}
+
+It can be seen that small $\lambda$ leads to random spots, which is caused by the ill-posedness of the inverse problem minimizing
+\begin{equation}
+\frac{1}{2} \int \rbr{ f - A u }^2.
+\end{equation}
+For large $\lambda$, artifacts get severer and both PSNR and SSIM drops again.
+
+\subsection{Influence of the wavelet operator}
+
+We then observe the influence of the wavelet operator. We first modify the level of wavelet transform. The experiment configuration is the same as the experiment of $\lambda$. The images are shown in Figure \ref{Fig:AnaLevel} and results are shown in Table \ref{Tbl:AnaLevel}. In this experiment, when the level of wavelet transforms are no greater than 5, $\lambda$ is scaled to keep $ \int \lambda $ as a constant, where the integral goes over levels and image domains.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure3lena0.png}
+\includegraphics[scale=0.2]{Figure3lena1.png}
+\includegraphics[scale=0.2]{Figure3lena2.png}
+
+\includegraphics[scale=0.2]{Figure3lena3.png}
+\includegraphics[scale=0.2]{Figure3lena4.png}
+\includegraphics[scale=0.2]{Figure3lena5.png}
+
+\includegraphics[scale=0.2]{Figure3tsukasa0.png}
+\includegraphics[scale=0.2]{Figure3tsukasa1.png}
+\includegraphics[scale=0.2]{Figure3tsukasa2.png}
+
+\includegraphics[scale=0.2]{Figure3tsukasa3.png}
+\includegraphics[scale=0.2]{Figure3tsukasa4.png}
+\includegraphics[scale=0.2]{Figure3tsukasa5.png}
+
+\caption{Images of different levels of wavelet transform of the analysis model}
+\label{Fig:AnaLevel}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:AnaLevel}.
+}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table51.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table52.tbl}
+\end{tabular}
+\caption{Effects of different levels of wavelet transform of the analysis model}
+\label{Tbl:AnaLevel}
+\end{table}
+
+It can be seen from the figures that only one levels of wavelet transform cannot alleviate the artifacts effectively. As the number of levels increases, both PSNR and SSIM increases. Carefully comparison between images tells that some details are preserved in the images.
+
+We than observe the influence of different wavelet. With the same configuration, the images and data are shown in Figure \ref{Fig:AnaWav} and Table \ref{Tbl:AnaWav}.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure5lena1.png}
+\includegraphics[scale=0.2]{Figure5lena2.png}
+\includegraphics[scale=0.2]{Figure5lena3.png}
+
+\includegraphics[scale=0.2]{Figure5lena4.png}
+\includegraphics[scale=0.2]{Figure5lena5.png}
+\includegraphics[scale=0.2]{Figure5lena6.png}
+
+\includegraphics[scale=0.2]{Figure5tsukasa1.png}
+\includegraphics[scale=0.2]{Figure5tsukasa2.png}
+\includegraphics[scale=0.2]{Figure5tsukasa3.png}
+
+\includegraphics[scale=0.2]{Figure5tsukasa4.png}
+\includegraphics[scale=0.2]{Figure5tsukasa5.png}
+\includegraphics[scale=0.2]{Figure5tsukasa6.png}
+
+\caption{Images of different wavelets of the analysis model}
+\label{Fig:AnaWav}
+}
+{
+\footnotesize Images correspond to Table \ref{Tbl:AnaWav}.
+}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table61.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table62.tbl}
+\end{tabular}
+\caption{Effects of different wavelets of the analysis model}
+\label{Tbl:AnaWav}
+\end{table}
+
+It can be seen that different wavelets are compatible with different types of images. For the classical image \verb"lena", \verb"coif2" works the best. For Anime image \verb"tsukasa", \verb"haar" works the best. This depends on the structure of image. Additionally, one may observe different artifacts from different wavelets. The artifact of \verb"haar" wavelet is always blocks, while artifacts of others include ripples, spots and strips.
+
+We have pointed out in the previous sections that we apply \emph{stationary wavelet transform} (SWT) to calculate $W$. In the stationary wavelet transform, there is no down-sampling in the decomposition stage and zeros are added in the reconstruction stage. Therefore, this algorithm is also called \emph{algorithme \`a trous}. As a result, the dimension of co-domain of $W$ is strictly greater than the dimension of domain of $W$, namely the image domain. Greater levels of transform leads to higher dimension, and consequently higher redundancy. It is well known that the redundancy of frames helps a lot in image restoration task.
+
+On the contrary, another popular wavelet transform is \emph{discrete wavelet transform} (DWT), in which down-sampling is performed and no redundancy is introduced. This transform is widely used in image compression task. Since the dimension of co-domain coincides with that of domain, we can even derive $ W^{\text{T}} W = W W^{\text{T}} = I $. We may further investigate the effect of DFT. The boundary conditions are handled by augmenting the original image by twice on each side according to symmetric extension. The experiment configuration is again identical. The images are shown in Figure \ref{Fig:DWT}. Here $\lambda$ are doubled for each level and the coefficient of the first level is 3e-3.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure8lena0.png}
+\includegraphics[scale=0.2]{Figure8lena1.png}
+\includegraphics[scale=0.2]{Figure8lena2.png}
+
+\includegraphics[scale=0.2]{Figure8tsukasa0.png}
+\includegraphics[scale=0.2]{Figure8tsukasa1.png}
+\includegraphics[scale=0.2]{Figure8tsukasa2.png}
+
+\caption{Images of different wavelet transform of the analysis model}
+\label{Fig:DWT}
+}
+{
+\footnotesize Left: degraded image; middle: SWT; right: DWT.
+}
+\end{figure}
+
+Visual comparison direct yields that DWT causes severer artifacts. This phenomenon is called ``blocking'', and alleviating blocking is an important task in JPGE compression. The mechanism is about redundancy as explained. In particular, images using DWT suffers from severe boundary effect because DWT is not translation-invariance: the sub-sampling process removes such invariance compared to SWT, and SWT is designed to overcome this deficiency.
+
+\section{Balance model}
+
+Another model may also be proposed, by mapping the wavelet coefficient to the domain of images. The variational problem can be written as
+\begin{equation}
+\frac{1}{2} \int \rbr{ f - A W^{\text{T}} \alpha }^2 + \int \abs{ \lambda \cdot \alpha } + \frac{\kappa}{2} \int \norm{ \rbr{ I - W W^{\text{T}} } \alpha }^2.
+\end{equation}
+It can be descretized as
+\begin{equation}
+J = \frac{1}{2} \norm{ f - A W^{\text{T}} \alpha }_2^2 + \abs{ \lambda \cdot \alpha } + \frac{\kappa}{2} \norm{ \rbr{ I - W W^{\text{T}} } \alpha }_2^2.
+\end{equation}
+The optimization problem is hence
+\begin{equation}
+\begin{array}{ll}
+\text{minimize} & \norm{ f - A W^{\text{T}} \alpha }_2^2 / 2 + \abs{ \lambda \cdot \alpha } + \kappa \norm{ \rbr{ I - W W^{\text{T}} } \alpha }_2^2 / 2 .
+\end{array}
+\end{equation}
+We apply accelerated proximal gradient method to solve this optimization problem by splitting the objective function into
+\begin{equation}
+J = F \rbr{\alpha} + G \rbr{\alpha}
+\end{equation}
+where
+\begin{gather}
+F \rbr{\alpha} = \frac{1}{2} \norm{ f - A W^{\text{T}} \alpha }_2^2 + \frac{\kappa}{2} \norm{ \rbr{ I - W W^{\text{T}} } \alpha }_2^2, \\
+G \rbr{\alpha} = \abs{ \lambda \cdot \alpha }.
+\end{gather}
+We fix $ \alpha^{\rbr{0}} = \alpha^{\rbr{-1}} = f $. We then calculate
+\begin{gather}
+\alpha^{\rbr{ k + 1 / 2 }} = \alpha^{\rbr{k}} + \frac{ k - 1 }{ k + 2 } \rbr{ \alpha^{\rbr{k}} - \alpha^{\rbr{ k - 1 }} }, \\
+\alpha^{\rbr{ k + 1 }} = \opprox_{ \gamma G } \rbr{ \alpha^{\rbr{ k + 1 / 2 }} - \gamma \nabla F \rbr{\alpha^{\rbr{ k + 1 / 2 }}} }.
+\end{gather}
+where $\gamma$ is a fixed step size. Analytically, the iterative scheme is
+\begin{equation}
+\alpha^{\rbr{ k + 1 }} = \mathcal{S}_{ \eta \lambda } \rbr{ \alpha^{\rbr{ k + 1 / 2 }} - \gamma \rbr{ W A^{\text{T}} \rbr{ A W^{\text{T}} \alpha^{\rbr{ k + 1 / 2 }} - f } + \kappa \rbr{ I - W W^{\text{T}} } \alpha^{\rbr{ k + 1 / 2 }} } }
+\end{equation}
+by noticing that
+\begin{equation}
+\rbr{ I - W W^{\text{T}} }^{\text{T}} \rbr{ I - W W^{\text{T}} } = I - W W^{\text{T}}
+\end{equation}
+where $\mathcal{S}$ is again the soft threshold operator. We take the stopping criterion
+\begin{equation}
+\frac{\norm{ \alpha^{\rbr{k}} - \alpha^{\rbr{ k - 1 }} }}{\norm{f}} < \epsilon.
+\end{equation}
+
+\subsection{Numerical result}
+
+We examine this model with similar settings. We apply 4 levels of wavelet transform here, and $\lambda$ are again identical for each level. Here $\gamma$ is fixed to 0.2. The stopping criterion $\epsilon$ is fixed to 5e-4. The numerical results are shown in Figure \ref{Fig:Bal} and Table \ref{Tbl:Bal}.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure2barbara0.png}
+\includegraphics[scale=0.2]{Figure2barbara1.png}
+\includegraphics[scale=0.2]{Figure2barbara2.png}
+
+\includegraphics[scale=0.2]{Figure2boats0.png}
+\includegraphics[scale=0.2]{Figure2boats1.png}
+\includegraphics[scale=0.2]{Figure2boats2.png}
+
+\includegraphics[scale=0.2]{Figure2lena0.png}
+\includegraphics[scale=0.2]{Figure2lena1.png}
+\includegraphics[scale=0.2]{Figure2lena2.png}
+
+\includegraphics[scale=0.2]{Figure2gradient0.png}
+\includegraphics[scale=0.2]{Figure2gradient1.png}
+\includegraphics[scale=0.2]{Figure2gradient2.png}
+
+\includegraphics[scale=0.2]{Figure2triangle0.png}
+\includegraphics[scale=0.2]{Figure2triangle1.png}
+\includegraphics[scale=0.2]{Figure2triangle2.png}
+
+\includegraphics[scale=0.2]{Figure2tsukasa0.png}
+\includegraphics[scale=0.2]{Figure2tsukasa1.png}
+\includegraphics[scale=0.2]{Figure2tsukasa2.png}
+
+\caption{Images of balance model}
+\label{Fig:Bal}
+}
+{
+\footnotesize Left: original image $u$; middle: degraded image $f$; right: enhanced image $u^{\rbr{k}}$.
+}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Name & $\lambda$ & Wavelet & \#Iterations & Time (\Si{s}) \\
+\hline
+\input{Table21.tbl}
+\end{tabular}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+& \multicolumn{3}{c|}{ PSNR (\Si{dB}) } & \multicolumn{3}{c|}{SSIM} \\
+\hline
+Name & Degraded & Enhanced & Diff. & Degraded & Enhanced & Diff. \\
+\hline
+\input{Table22.tbl}
+\end{tabular}
+\caption{Numerical results of balance model}
+\label{Tbl:Bal}
+\end{table}
+
+It can be seen directly that the balance model also succeeds in the image enhancement task. The influence of blurs and the artifacts are very similar to the analysis model.
+
+\subsection{The role of $\lambda$}
+
+We also vary $\lambda$ here. The configuration of this experiment is similar to the Table \ref{Tbl:Bal}. The qualitative results are shown in Figure \ref{Fig:BalLam} and quantitative results are shown in Table \ref{Tbl:BalLam}.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure6lena0.png}
+\includegraphics[scale=0.2]{Figure6lena1.png}
+\includegraphics[scale=0.2]{Figure6lena2.png}
+
+\includegraphics[scale=0.2]{Figure6lena3.png}
+\includegraphics[scale=0.2]{Figure6lena4.png}
+\includegraphics[scale=0.2]{Figure6lena5.png}
+
+\includegraphics[scale=0.2]{Figure6tsukasa0.png}
+\includegraphics[scale=0.2]{Figure6tsukasa1.png}
+\includegraphics[scale=0.2]{Figure6tsukasa2.png}
+
+\includegraphics[scale=0.2]{Figure6tsukasa3.png}
+\includegraphics[scale=0.2]{Figure6tsukasa4.png}
+\includegraphics[scale=0.2]{Figure6tsukasa5.png}
+
+\caption{Images of different $\lambda$ of the balance model}
+\label{Fig:BalLam}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:BalLam}.
+}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table41.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table42.tbl}
+\end{tabular}
+\caption{Effects of different $\lambda$ of the balance model}
+\label{Tbl:BalLam}
+\end{table}
+
+Again, small $\lambda$ means random spots and large $\lambda$ leads to artifacts specified by the wavelet we choose. We should note that large $\lambda$ with wavelet except \verb"haar" may leads to blurry images. This is because the high frequency components are damped and therefore sharpness decreases.
+
+\subsection{The role of $\kappa$}
+
+We can also investigate the role of $\kappa$ by varying $\kappa$. Using the configuration in Table \ref{Tbl:Bal}, the numerical results are shown in Figure \ref{Fig:BalKap} and Table \ref{Tbl:BalKap}.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure7lena0.png}
+\includegraphics[scale=0.2]{Figure7lena1.png}
+\includegraphics[scale=0.2]{Figure7lena2.png}
+
+\includegraphics[scale=0.2]{Figure7lena3.png}
+\includegraphics[scale=0.2]{Figure7lena4.png}
+\includegraphics[scale=0.2]{Figure7lena5.png}
+
+\includegraphics[scale=0.2]{Figure7tsukasa0.png}
+\includegraphics[scale=0.2]{Figure7tsukasa1.png}
+\includegraphics[scale=0.2]{Figure7tsukasa2.png}
+
+\includegraphics[scale=0.2]{Figure7tsukasa3.png}
+\includegraphics[scale=0.2]{Figure7tsukasa4.png}
+\includegraphics[scale=0.2]{Figure7tsukasa5.png}
+
+\caption{Images of different $\kappa$ of the balance model}
+\label{Fig:BalKap}
+}
+{
+\footnotesize First: degraded image $f$; following image correspond to Table \ref{Tbl:BalKap}.
+}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{7}{|c|}{\texttt{lena}} \\
+\hline
+\input{Table71.tbl}
+\multicolumn{7}{|c|}{\texttt{tsukasa}} \\
+\hline
+\input{Table72.tbl}
+\end{tabular}
+\caption{Effects of different $\kappa$ of the balance model}
+\label{Tbl:BalKap}
+\end{table}
+
+In terms of PSNR and SSIM, one may observe the ``balance'' between two extreme cases: the synthesis model $ \kappa = 0 $ and analysis model $ \kappa = +\infty $. However, there are not much visual difference. Careful comparison yields that small $\kappa$ leads to images with more details, but the noise cannot be fully removed. Large $\kappa$ cleans the noise more aggressively while blurs the image or introduces more artifacts.
+
+\section{Discussion}
+
+We compare the TV model, analysis model and balance model in this section. A summary figure is shown in Figure \ref{Fig:Sum}.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure9barbara2.png}
+\includegraphics[scale=0.2]{Figure1barbara2.png}
+\includegraphics[scale=0.2]{Figure2barbara2.png}
+
+\includegraphics[scale=0.2]{Figure9boats2.png}
+\includegraphics[scale=0.2]{Figure1boats2.png}
+\includegraphics[scale=0.2]{Figure2boats2.png}
+
+\includegraphics[scale=0.2]{Figure9lena2.png}
+\includegraphics[scale=0.2]{Figure1lena2.png}
+\includegraphics[scale=0.2]{Figure2lena2.png}
+
+\includegraphics[scale=0.2]{Figure9gradient2.png}
+\includegraphics[scale=0.2]{Figure1gradient2.png}
+\includegraphics[scale=0.2]{Figure2gradient2.png}
+
+\includegraphics[scale=0.2]{Figure9triangle2.png}
+\includegraphics[scale=0.2]{Figure1triangle2.png}
+\includegraphics[scale=0.2]{Figure2triangle2.png}
+
+\includegraphics[scale=0.2]{Figure9tsukasa2.png}
+\includegraphics[scale=0.2]{Figure1tsukasa2.png}
+\includegraphics[scale=0.2]{Figure2tsukasa2.png}
+
+\caption{Images of different models}
+\label{Fig:Sum}
+}
+{
+\footnotesize Left: TV model; middle: analysis model; right: balance model.
+}
+\end{figure}
+
+From the figures in this assignment and Assignment 1, we can see that the two wavelet-based models are as good as the TV model in term of PSNR. However, these two model always outperform the TV model in terms of SSIM and visual quality. The artifacts of TV model is ``stair-case'', i.e. small patches of constant value. However, the artifacts of wavelet models are ripples, small blocks and strips, which are less sensible than ``stair-case''. Between the analysis model and balance model, one may observe that the balance model is slightly better than the analysis model since less artifacts have been introduced and the images are a bit sharper. This is because the synthesis model means sharper but noisy images, while the noise here is less sensible compared to blurs. A special case is the \verb"gradient" image. After carefully parameter-tuning, the peak PSNR can exceed 47 for the balance model while the analysis model yields only about 45. This exemplifies the difference between the two models.
+
+\end{document}
