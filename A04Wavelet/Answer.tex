@@ -62,9 +62,9 @@ v^{\rbr{ k + 1 }} &= \mathop{\arg\min}_v \rbr{ \abs{ \lambda \cdot v } + \rbr{p^
 &= \mathcal{S}_{ \lambda / \rho } \rbr{ \nabla u^{\rbr{ k + 1 }} - \frac{1}{\rho} p^{\rbr{k}} },
 \end{split}
 \end{equation}
-where $\mathcal{S}$ is the soft shrinkage function, which is
+where $\mathcal{S}$ is the soft shrinkage function, which is ($ \rbr{ i, j } $ stands for coordinates of pixels, $k$ stands for the low-high frequency components and $l$ stands for levels)
 \begin{equation}
-\rbr{ \mathcal{S}_t \rbr{v} }_{ i, j } = \rbr{ v_{ i, j }^1, v_{ i, j }^2 } \frac{ \phi_{t_{ i, j }} \rbr{\norm{v_{ i, j }}_2} }{\norm{v_{ i, j }}_2}
+\rbr{ \mathcal{S}_t \rbr{v} }_{ i, j, k, l } = v_{ i, j, k, l } \frac{ \phi_{t_{ k, l }} \rbr{\norm{v_{ i, j, k, l }}_2} }{\norm{v_{ i, j, k, l }}_2}
 \end{equation}
 where
 \begin{equation}
