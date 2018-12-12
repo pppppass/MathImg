@@ -1,0 +1,327 @@
+%! TeX encoding = UTF-8
+%! TeX program = LuaLaTeX
+
+\documentclass[english, nochinese]{pnote}
+\usepackage{siunitx}
+\usepackage[paper]{pdef}
+\usepackage{biblatex}
+\usepackage{caption}
+
+\addbibresource{Bibliography.bib}
+
+\title{Answers to Assignment 5}
+\author{Zhihan Li, 1600010653}
+\date{December 12, 2018}
+
+\begin{document}
+
+\maketitle
+
+\section{Wavelet-based Chan--Vese model}
+
+\textbf{Problem 1.} \textit{Answer.} We test the wavelet-based image segmentation model (we called it wavelet-based Chan--Vese model) in this section
+
+\subsection{Model}
+
+We adopt notations from Assignment 3. The wavelet-based Chan--Vese resembles the original Chan--Vese model, which optimize the problem
+\begin{equation}
+\min_{ 0 \le u \le 1 } \int_{\Omega} \abs{ \nabla u } + \mu \int_{\Omega} \rbr{ \rbr{ c_1 - i }^2 - \rbr{ c_2 - i }^2 } u
+\end{equation}
+by assume two segmentation components differs in intensity mean. The wavelet-based version optimize
+\begin{equation}
+\min_{ 0 \le u \le 1 } \int_{\Omega} \abs{ \lambda \cdot W u } + \mu \int_{\Omega} \rbr{ \rbr{ c_1 - i }^2 - \rbr{ c_2 - i }^2 } u
+\end{equation}
+where $W$ is the wavelet analysis operator. The discretization is
+\begin{equation}
+\min_{ 0 \le u \le 1 } \abs{ \lambda \cdot \eta W u } + \mu r^{\text{T}} u
+\end{equation}
+where
+\begin{equation}
+r = \rbr{ c_1 - i }^2 - \rbr{ c_2 - i }^2
+\end{equation}
+and $\eta$ is a constant to mimic the original Chan--Vese model. To be exact, we set $ \eta = 2 \min \cbr{ N, M } $. When $W$ is one-level Haar wavelet transform and $ \lambda = 1 $ only for the A (approximation) D (detail) and DA band (otherwise $0$), the optimization objective function exactly recovers the original Chan--Vese model using anisotropic total variation. This is because $ W^{\text{T}} W = I $ leads to the scaling constant
+\begin{equation}
+\msbr{ W_{\text{AD}} \\ W_{\text{DA}} } = \frac{1}{\eta} \nabla
+\end{equation}
+where $\nabla$ is discretized by
+\begin{gather}
+\rbr{u_x}_{ i + 1 / 2, j + 1 / 2 } = \frac{ u_{ i + 1, j } + u_{ i + 1, j + 1 } - u_{ i, j } - u_{ i, j + 1 } }{ 2 h } \\
+\rbr{u_y}_{ i + 1 / 2, j + 1 / 2 } = \frac{ u_{ i, j + 1 } + u_{ i + 1, j + 1 } - u_{ i, j } - u_{ i + 1, j } }{ 2 h }.
+\end{gather}
+We again adopt the PDHG (primal dual hybrid gradient) method. By introduction $ v = \eta W u $, we get the Lagrangian
+\begin{equation}
+\mathcal{L} \rbr{ u, v, p } = \abs{v} + \mu r^{\text{T}} u + p^{\text{T}} \rbr{ v - \eta W u } + I_{\sbr{ 0, 1 }} \rbr{u}.
+\end{equation}
+Optimality of $v$ yields
+\begin{equation}
+\min_v \mathcal{L} \rbr{ u, v, w } = \mu r^{\text{T}} u - \eta p^{\text{T}} W u + I_{\sbr{ 0, 1 }} \rbr{u} - I_{ -\lambda \le \cdot \le \lambda } \rbr{p}.
+\end{equation}
+The step of $u$ is hereof
+\begin{equation}
+u^{\rbr{ k + 1 }} = P_{\sbr{ 0, 1 }} \rbr{ u^{\rbr{k}} - \alpha \rbr{ \mu r - \eta W^{\text{T}} p^{\rbr{k}} } }
+\end{equation}
+and that of $p$ is
+\begin{equation}
+p^{\rbr{ k + 1 }} = P_{ -\lambda \le \cdot \le \lambda } \rbr{ p^{\rbr{k}} - \beta \eta W u^{\rbr{ k + 1 }} }.
+\end{equation}
+After the PDHG iterations converge, we threshold $u$ by $ 1 / 2 $ to get $K$, namely $ K = \cbr{ \mathbf{x} : u \rbr{\mathbf{x}} < 1 / 2 } $. We then update $c_1$ and $c_2$ by the mean of intensity in $ \Omega \setminus K $ and $K$.
+
+\subsection{Numerical result}
+
+We use two-level Haar wavelet transform here. Here $\lambda$ are set to be zero for the AA band and $1$, $ 1 / 2 $ for other bands in the first and second level respectively. In practice, we mimic the parameter in the Chan--Vese model by $ \alpha = \beta = 10^{-3} $. We still only proceed 30 iterations for the inner loop (PDHG) and 30 iterations for the outer loop (update of $c_1$ and $c_2$). The segmentation results are given in Figure \ref{Fig:WCV}. Parameters of the algorithm are shown in Table \ref{Tbl:WCVPara}.
+
+\begin{figure}[htbp]
+\centering
+
+\includegraphics[scale=0.4]{Figure2triangle.png}
+\includegraphics[scale=0.4]{Figure2objects.png}
+
+\includegraphics[scale=0.4]{Figure2cells.png}
+\includegraphics[scale=0.4]{Figure2bird.png}
+
+\includegraphics[scale=0.4]{Figure2lena.png}
+\includegraphics[scale=0.4]{Figure2konata.png}
+
+\caption{Segmentation results of the wavelet-based Chan--Vese model}
+\label{Fig:WCV}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Name & $\mu$ & Init. $c_1$ & Init. $c_2$ & Fin. $c_1$ & Fin. $c_2$ & Time (\Si{s}) \\
+\hline
+\input{Table1.tbl}
+\end{tabular}
+\caption{Parameters of the wavelet-based Chan--Vese model}
+\label{Tbl:WCVPara}
+\end{table}
+
+From these figures, we can observe that the wavelet-based Chan--Vese model works well as the original Chan--Vese model. According to the nature of \emph{binary} segmentation model, the model fails on the white feather in \verb"bird". Generally speaking, some light color pieces get missing and some dark color pieces are mistakenly selected. Again \verb"lena" and \verb"konata" fails. Since we use Haar wavelet to penalize the coefficients, the boundary sometimes gets harse, especially in \verb"cells". 
+
+\subsection{Comparison to TV-based Chan--Vese model}
+
+As mentioned before, the original convexifed Chan--Vese model is TV (total variation)-based. We first compare Figure \ref{Fig:WCV} and the Figure \ref{Fig:CV}.
+
+\begin{figure}[htbp]
+\centering
+
+\includegraphics[scale=0.4]{Figure4triangle.png}
+\includegraphics[scale=0.4]{Figure4objects.png}
+
+\includegraphics[scale=0.4]{Figure4cells.png}
+\includegraphics[scale=0.4]{Figure4bird.png}
+
+\includegraphics[scale=0.4]{Figure4lena.png}
+\includegraphics[scale=0.4]{Figure4konata.png}
+
+\caption{Segmentation results of the TV-based convexified Chan--Vese model}
+\label{Fig:CV}
+\end{figure}
+
+From this figure, we find that the Haar wavelet-based Chan--Vese model produces shaper segmentation results than the original TV-based Chan--Vese model. One example is the spindle-shaped cell in \verb"cells": the wavelet-based methods succeeds in capturing one end of the spindle while the original one fails. However, wavelet itself introduces some artifacts: the boundary sometimes gets ``blocked'' due to the nature of Haar wavelets.
+
+One need to notice that the segmentation result heavily relies on the the selection of $\mu$. To make a fair comparison, we further compare numerical result using different wavelets and different $\mu$, as shown in Figure \ref{Fig:Diff} and Table \ref{Tbl:Diff}.
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[scale=0.2]{Figure30.png}
+\includegraphics[scale=0.2]{Figure3tv1.png}
+\includegraphics[scale=0.2]{Figure3tv2.png}
+
+\includegraphics[scale=0.2]{Figure3tv3.png}
+\includegraphics[scale=0.2]{Figure3tv4.png}
+\includegraphics[scale=0.2]{Figure3tv5.png}
+
+\includegraphics[scale=0.2]{Figure30.png}
+\includegraphics[scale=0.2]{Figure3haar1.png}
+\includegraphics[scale=0.2]{Figure3haar2.png}
+
+\includegraphics[scale=0.2]{Figure3haar3.png}
+\includegraphics[scale=0.2]{Figure3haar4.png}
+\includegraphics[scale=0.2]{Figure3haar5.png}
+
+\caption{Numerical results from different wavelets and $\mu$}
+\label{Fig:Diff}
+}
+{
+\footnotesize The wavelet and $\mu$ used correspond to \verb"tv" and \verb"haar" entries in Table \ref{Tbl:Diff}.
+}
+\end{figure}
+
+\begin{figure}[htbp]
+{
+\ContinuedFloat
+\centering
+
+\includegraphics[scale=0.2]{Figure30.png}
+\includegraphics[scale=0.2]{Figure3db1.png}
+\includegraphics[scale=0.2]{Figure3db2.png}
+
+\includegraphics[scale=0.2]{Figure3db3.png}
+\includegraphics[scale=0.2]{Figure3db4.png}
+\includegraphics[scale=0.2]{Figure3db5.png}
+
+\includegraphics[scale=0.2]{Figure30.png}
+\includegraphics[scale=0.2]{Figure3coif1.png}
+\includegraphics[scale=0.2]{Figure3coif2.png}
+
+\includegraphics[scale=0.2]{Figure3coif3.png}
+\includegraphics[scale=0.2]{Figure3coif4.png}
+\includegraphics[scale=0.2]{Figure3coif5.png}
+
+\caption{Numerical results from different wavelets and $\mu$ (cont.)}
+}
+{
+\footnotesize The wavelet and $\mu$ used correspond to \verb"db6" and \verb"coif2" entries Table \ref{Tbl:Diff}.
+}
+\end{figure}
+
+\begin{table}[htbp]
+{
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+Wavelet & \multicolumn{5}{c|}{$\mu$} \\
+\hline
+\input{Table2.tbl}
+\end{tabular}
+\caption{Different wavelets and $\mu$ used for experiment}
+\label{Tbl:Diff}
+}
+{
+\footnotesize Here \verb"tv" stands for the TV-based convexfied Chan--Vese model for convenience.
+}
+\end{table}
+
+From these figures, we deduce that different models (different wavelets) prefers different boundary. As a result, if there are some prior knowledge about the boundary, we can then specify a wavelet to do the job. One of the phenomena is that small $\mu$ leads to overshoot regularization and some thin branches of the tree are missing. On the contrary, models of small $\mu$ can capture general shape of the hawk in spite of the white feathers. One may compare the third image ($ \mu = 2 \times 10^3 $) of \verb"tv" and the third image ($ \mu = 6 \times 10^3 $) of \verb"haar". With this $\mu$, both thin branches and details of the tree branches (spikes) are captures, while the boundary near white feather does not goes too harsh. Smaller $\mu$ results in missing details, and larger $\mu$ spoils the boundary. Therefore, we may choose this two as the best result for comparison. Careful comparison yields that the boundary of \verb"tv" is harsher than \verb"haar", especially the left boundary of the bird, which itself has some ambiguity.
+
+\section{Wavelet-based surface reconstruction}
+
+\textbf{Problem 1.} \textit{Answer.} We test the wavelet-based surface reconstruction model in this section.
+
+\subsection{Model}
+
+We reproduce the numerical result in \parencite{dong_wavelet_2011}. Given points $\mathcal{X}$ on a closed surface, the task is to reconstruct the surface. We first calculate
+\begin{equation}
+\phi \rbr{\mathbf{x}} = \min_{ y \in \mathcal{X} } \norm{ x - y }_2
+\end{equation}
+by solving the Eikonal's equation. With a initial guess of the interior of the surface $\Omega_0$, we construct the model
+\begin{equation}
+\min_{ 0 \le u \le  1 } \int \abs{ \lambda \cdot W u } + \int \rbr{ 2 f - 1 } u
+\end{equation}
+where
+\begin{equation}
+f = \chi_{\Omega_0}
+\end{equation}
+stands for the initial guess, and
+\begin{equation}
+\lambda \rbr{\mathbf{x}} = \alpha \phi \rbr{\mathbf{x}}
+\end{equation}
+where $\alpha$ is the regularization coefficient. Here $u$ is a level set function and the final result is found by the $ \eta = 0.5 $ iso-surface of $u$. The model is discretized as follows. The optimization problem is
+\begin{equation}
+\min_{ 0 \le u \le 1 } \abs{ \lambda \cdot W u } + r^{\text{T}} u
+\end{equation}
+where
+\begin{equation}
+r = 2 f - 1
+\end{equation}
+with discretization. We adopt ADMM (alternative direction multiplier method) to solve this problem. By introducing
+\begin{equation}
+d = W u
+\end{equation}
+and $ \mu v $ the dual variable of the constraint
+\begin{equation}
+W u - d = 0
+\end{equation}
+with $\mu$ the step size, the augmented Lagrangian is
+\begin{equation}
+\mathcal{L} \rbr{ u, d, v } = \abs{ W v } + r^{\text{T}} u + \mu v^{\text{T}} \rbr{ W u - d } + \frac{\mu}{2} \norm{ W u - d }^2.
+\end{equation}
+The $u$ step is
+\begin{equation}
+u^{\rbr{ k + 1 }} = P_{\sbr{ 0, 1 }} \rbr{ W^{\text{T}} \rbr{ d^{\rbr{k}} - v^{\rbr{k}} } } - \frac{1}{\mu} r,
+\end{equation}
+the $d$ step is
+\begin{equation}
+d^{\rbr{ k + 1 }} = \mathcal{S}_{ \lambda / \mu } \rbr{ W u^{\rbr{ k + 1 }} + v^{\rbr{k}} },
+\end{equation}
+and the $v$ step is
+\begin{equation}
+v^{\rbr{ k + 1 }} = v^{\rbr{k}} + W u^{\rbr{ k + 1 }} - d^{\rbr{ k + 1 }}.
+\end{equation}
+Here $\mathcal{S}$ stands for the (element-wise) soft-thresholding operator, namely for each entry
+\begin{equation}
+\mathcal{S}_t \rbr{x} = x - P_{\sbr{ -t, t }} \rbr{x}.
+\end{equation}
+
+\subsection{Numerical result}
+
+We use the provided $f$ in our implementation. We set $ \mu = 50 $, $ \alpha = 75 $ and one-level Haar wavelet for the wavelet analysis operator $W$. We terminate the optimization procedure at the 100-th iteration, at which the the visual quality is satisfactory and
+\begin{equation}
+\frac{\norm{ u^{\rbr{ k + 1 }} - u^{\rbr{k}} }}{\norm{u^{\rbr{k}}}} < \epsilon
+\end{equation}
+with $ \epsilon = 5 \times 10^{-4} $. Some information are summarized in Table \ref{Tbl:Info}, and the figures are left in Figure \ref{Fig:cndragon}, \ref{Fig:lucy} and \ref{Fig:statuette}.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+Name & Size & Time(\Si{s}) \\
+\hline
+\input{Table3.tbl}
+\end{tabular}
+\caption{Information about experiments}
+\label{Tbl:Info}
+\end{table}
+
+\begin{figure}[htbp]
+{
+\centering
+
+\includegraphics[width=0.8\paperwidth]{Figure1cndragonfront.png}
+
+\includegraphics[width=0.8\paperwidth]{Figure1cndragonbackrot.png}
+
+\caption{Figure of \texttt{cndragon}}
+\label{Fig:cndragon}
+}
+{
+\footnotesize First: front view; second: back view.
+}
+\end{figure}
+
+\begin{figure}[htbp]
+{
+\centering
+\includegraphics[width=0.32\paperwidth]{Figure1lucyfront.png}
+\includegraphics[width=0.32\paperwidth]{Figure1lucyback.png}
+\caption{Figure of \texttt{lucy}}
+\label{Fig:lucy}
+}
+{
+\footnotesize First: front view; second: back view.
+}
+\end{figure}
+
+\begin{figure}[htbp]
+{
+\centering
+\includegraphics[width=0.32\paperwidth]{Figure1statuetteback.png}
+\includegraphics[width=0.32\paperwidth]{Figure1statuettefrontrot.png}
+\caption{Figure of \texttt{statuette}}
+\label{Fig:statuette}
+}
+{
+\footnotesize First: front view; second: back view.
+}
+\end{figure}
+
+It can be seen from these figures that there are still artifacts of blocks in the reconstructed surfaces. This may be caused by the deployment of Haar wavelet in this model.
+
+\printbibliography
+
+\end{document}

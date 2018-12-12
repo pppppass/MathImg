@@ -22,6 +22,7 @@ Temporary/
 *.dir
 *.png
 *.bmp
+*.mat
 
 # External files
 
