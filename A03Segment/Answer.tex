@@ -287,7 +287,7 @@ u_t = \opdiv \rbr{\frac{ \nabla u }{\abs{ \nabla u }}} - \mu \rbr{ \rbr{ c_1 - i
 \end{equation}
 A convex variational relax of this equation can be found, that is
 \begin{equation}
-\min_{ 0 \le u \le 1 } \int_{\Omega} \abs{ \nabla u } + \mu \int_{\Omega} \rbr{ \rbr{ c_1 - i }^2 + \rbr{ c_2 - i }^2 } u.
+\min_{ 0 \le u \le 1 } \int_{\Omega} \abs{ \nabla u } + \mu \int_{\Omega} \rbr{ \rbr{ c_1 - i }^2 - \rbr{ c_2 - i }^2 } u.
 \end{equation}
 The discretization is
 \begin{equation}
@@ -303,7 +303,7 @@ The optimization problem can be solve by PDHG (primal dual hybrid gradient). By 
 \end{equation}
 Optimizing $v$ first, we obtain
 \begin{equation}
-\min_v \mathcal{L} \rbr{ u, v, p } = \mu r^{\text{T}} u - p^{\text{T}} \nabla u + I_{\sbr{ 0, 1 }} \rbr{u} - I_{\sbr{ -1, 1 }} \rbr{\abs{p}}.
+\min_v \mathcal{L} \rbr{ u, v, p } = \mu r^{\text{T}} u - p^{\text{T}} \nabla u + I_{\sbr{ 0, 1 }} \rbr{u} - I_{\sbr{ -1, 1 }} \rbr{p}.
 \end{equation}
 As a result, the optimization procedure consists of
 \begin{equation}
@@ -317,7 +317,7 @@ Here the second projection $ \mathcal{P}_1 $ is the vector-wise project: it keep
 
 \subsection{Numerical result}
 
-In real practice, we take $ \alpha = \beta = 3 \times 10^{-4} $. Since the iteration converges rapidly, we only proceed 30 iterations for the inner loop (PDHG), and again 30 iterations for the outer loop (update of $c_1$ and $c_2$). The segmentation results are given in Figure \ref{Fig:Res}. Parameters of the algorithm are shown in Table \ref{Tbl:CV}.
+In real practice, we take $ \alpha = \beta = 10^{-3} $. Since the iteration converges rapidly, we only proceed 30 iterations for the inner loop (PDHG), and again 30 iterations for the outer loop (update of $c_1$ and $c_2$). The segmentation results are given in Figure \ref{Fig:Res}. Parameters of the algorithm are shown in Table \ref{Tbl:CV}.
 
 \begin{figure}[htbp]
 \centering
