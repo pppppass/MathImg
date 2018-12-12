@@ -8,12 +8,13 @@ import time
 import shelve
 import numpy
 import skimage.io
+import matplotlib
 from matplotlib import pyplot
 from utils import downsamp
 import gac
 
 
-# In[7]:
+# In[2]:
 
 
 filename_list = [
@@ -34,9 +35,9 @@ alpha_list = [
 ]
 tau_list = [
     0.012 * (1.0 / 256)**2,
-    0.02 * (1.0 / 244)**2,
-    0.02 * (1.0 / 246)**2,
-    0.02 * (1.0 / 160)**2,
+    0.02 * (1.0 / 256)**2,
+    0.02 * (1.0 / 256)**2,
+    0.02 * (1.0 / 256)**2,
     0.02 * (1.0 / 256)**2,
     0.02 * (1.0 / 256)**2,
 ]
@@ -50,9 +51,9 @@ edge_list = [
 ]
 len_list = [
     (2000, 10),
-    (2000, 10),
-    (2000, 10),
-    (2000, 10),
+    (2250, 10),
+    (2250, 10),
+    (2250, 10),
     (1000, 10),
     (1000, 10),
 ]
@@ -64,7 +65,7 @@ len_list = [
 rt = [{}]
 
 
-# In[8]:
+# In[4]:
 
 
 for j, filename in enumerate(filename_list):
@@ -90,7 +91,7 @@ for j, filename in enumerate(filename_list):
     rt[0][filename] = elapsed
 
 
-# In[ ]:
+# In[5]:
 
 
 with shelve.open("Result") as db:

@@ -5,12 +5,14 @@ import argparse
 import numpy
 import skimage.io
 from matplotlib import pyplot
-import cv
+import wcv
 
 parser = argparse.ArgumentParser(description="Segment an image")
 parser.add_argument("input", type=str, help="Input filename (should be .bmp)")
 parser.add_argument("output", type=str, help="Output filename")
-parser.add_argument("--mu", type=float, default=2000.0, help="Regularization coefficient (default 2000.0)")
+parser.add_argument("--mu", type=float, default=8000.0, help="Regularization coefficient (default 8000.0)")
+parser.add_argument("--wavelet", type=str, default="haar", help="Name of wavelet (default haar)")
+parser.add_argument("--level", type=int, default=1, help="Level of wavelet transforms (default 1)")
 parser.add_argument("--c1", type=float, default=1.0, help="Intensity cluster coefficient (default 1.0)")
 parser.add_argument("--c2", type=float, default=0.0, help="Intensity cluster coefficient (default 0.0)")
 parser.add_argument("--alpha", type=float, default=0.001, help="Primal step size (default 0.001)")
@@ -22,7 +24,7 @@ args = parser.parse_args()
 
 i = skimage.io.imread(args.input) / 255.0
 start = time.time()
-u, c1, c2 = cv.evolve_cv(i, args.mu, args.c1, args.c2, args.alpha, args.beta, args.out_iters, args.in_iters)
+u, c1, c2 = wcv.evolve_wcv(i, args.mu, args.wavelet, args.level, args.c1, args.c2, args.alpha, args.beta, args.out_iters, args.in_iters)
 end = time.time()
 pyplot.figure(figsize=(8.0, 8.0))
 pyplot.imshow(i, cmap="gray", vmin=0.0, vmax=1.0)
