@@ -257,6 +257,7 @@ Here $\mathcal{S}$ stands for the (element-wise) soft-thresholding operator, nam
 \begin{equation}
 \mathcal{S}_t \rbr{x} = x - P_{\sbr{ -t, t }} \rbr{x}.
 \end{equation}
+We initialize by $ u^{\rbr{0}} = 1 - f $, $ d^{\rbr{0}} = W u^{\rbr{0}} $ and $ v^{\rbr{0}} = 0 $.
 
 \subsection{Numerical result}
 
@@ -310,8 +311,8 @@ Name & Size & Time(\Si{s}) \\
 \begin{figure}[htbp]
 {
 \centering
-\includegraphics[width=0.32\paperwidth]{Figure1statuetteback.png}
 \includegraphics[width=0.32\paperwidth]{Figure1statuettefrontrot.png}
+\includegraphics[width=0.32\paperwidth]{Figure1statuetteback.png}
 \caption{Figure of \texttt{statuette}}
 \label{Fig:statuette}
 }
